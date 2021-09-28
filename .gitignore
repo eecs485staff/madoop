@@ -1,0 +1,35 @@
+# Python temporary files
+*.pyc
+__pycache__
+
+# Python virtual environment 
+/env/
+/env2/
+/env3/
+/.venv/
+/venv/
+
+# Python distribution productions
+dist/
+build/
+*.egg-info/
+
+# Editors
+*~
+
+# Test tools
+/.tox/
+/tmp/
+/.coverage*
+*,cover
+
+# Text editors and IDEs
+*~
+*.lock
+*.swp
+.vscode
+.ropeproject/
+.vscode/
+
+# macOS system files
+*.DS_Store
