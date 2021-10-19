@@ -23,7 +23,7 @@ def test_reduce_stage():
 
     if output_dir.exists():
         shutil.rmtree(output_dir)
-    output_dir.mkdir()
+    os.makedirs(output_dir)
 
     reduce_stage(exe, input_dir, output_dir, num_reducers, False)
     correct = pathlib.Path("tests/testdata/word_count/"

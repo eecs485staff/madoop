@@ -20,7 +20,7 @@ def test_group_stage():
 
     if output_dir.exists():
         shutil.rmtree(output_dir)
-    output_dir.mkdir()
+    os.makedirs(output_dir)
 
     group_stage(input_dir, output_dir)
     correct = pathlib.Path("tests/testdata/word_count/"

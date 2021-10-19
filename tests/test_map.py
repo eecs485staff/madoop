@@ -23,7 +23,7 @@ def test_map_stage():
 
     if output_dir.exists():
         shutil.rmtree(output_dir)
-    output_dir.mkdir()
+    os.makedirs(output_dir)
 
     map_stage(exe, input_dir, output_dir, num_mappers, False)
     correct = pathlib.Path("tests/testdata/word_count/"
