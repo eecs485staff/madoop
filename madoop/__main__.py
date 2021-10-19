@@ -173,7 +173,7 @@ def prepare_input_files(input_dir, output_dir):
         part_num += num_split
 
         # copy to new files
-        with in_file.open() as file:
+        with in_file.open(encoding="utf-8") as file:
             with ExitStack() as stack:
                 out_files = [
                     stack.enter_context(file2.open('w'))
@@ -187,7 +187,7 @@ def prepare_input_files(input_dir, output_dir):
 def check_num_keys(filename):
     """Check num keys."""
     key_instances = 0
-    with open(filename) as file:
+    with open(filename, encoding="utf-8") as file:
         for _ in file:
             key_instances += 1
 
@@ -249,20 +249,20 @@ def group_stage_cat_sort(input_dir, sorted_output_filename):
     sort order.
     """
     input_filenames = input_dir.glob("*")
-    with open(sorted_output_filename, 'w') as outfile:
-        cat_proc = subprocess.Popen(
+    with open(sorted_output_filename, 'w', encoding='utf-8') as outfile:
+        with subprocess.Popen(
             ["cat", *input_filenames],
             stdout=subprocess.PIPE,
             env={'LC_ALL': 'C.UTF-8'},
-        )
-        sort_proc = subprocess.Popen(
-            ["sort"],
-            stdin=cat_proc.stdout,
-            stdout=outfile,
-            env={'LC_ALL': 'C.UTF-8'},
-        )
-        cat_proc.wait()
-        sort_proc.wait()
+        ) as cat_proc, \
+            subprocess.Popen(
+                ["sort"],
+                stdin=cat_proc.stdout,
+                stdout=outfile,
+                env={'LC_ALL': 'C.UTF-8'},
+        ) as sort_proc:
+            cat_proc.wait()
+            sort_proc.wait()
     assert cat_proc.returncode == 0
     assert sort_proc.returncode == 0
 
@@ -322,7 +322,8 @@ def reduce_stage(exe, input_dir, output_dir, num_reduce, enforce_keyspace):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
-        with open(input_path) as infile, open(output_path, 'w') as outfile:
+        with open(input_path, encoding="utf-8") as infile, \
+             open(output_path, 'w', encoding="utf-8") as outfile:
             subprocess.run(
                 str(exe),
                 shell=True,
