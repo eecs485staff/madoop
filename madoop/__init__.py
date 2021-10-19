@@ -1,1 +1,1 @@
-"""Michigan Hadoop CLI API"""
+"""Michigan Hadoop CLI API."""
