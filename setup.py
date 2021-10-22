@@ -24,9 +24,7 @@ setuptools.setup(
     keywords=[
         "madoop", "michigan hadoop",
     ],
-    install_requires=[
-    
-    ],
+    install_requires=[],
     extras_require={
         "dev": [
             "pdbpp",
