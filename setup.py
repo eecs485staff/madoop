@@ -1,13 +1,12 @@
 """Michigan Hadoop CLI build and install configuration."""
-import os
-import io
+import pathlib
 import setuptools
 
 
 # Read the contents of README file
-PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(PROJECT_DIR, "README.md"), encoding="utf-8") as f:
-    LONG_DESCRIPTION = f.read()
+PROJECT_DIR = pathlib.Path(__file__).parent
+README = PROJECT_DIR/"README.md"
+LONG_DESCRIPTION = README.open(encoding="utf8").read()
 
 
 setuptools.setup(
@@ -30,8 +29,6 @@ setuptools.setup(
             "pdbpp",
             "twine",
             "tox",
-        ],
-        "test": [
             "check-manifest",
             "freezegun",
             "pycodestyle",
@@ -39,8 +36,6 @@ setuptools.setup(
             "pylint",
             "pytest",
             "pytest-cov",
-            "pytest-mock",
-            "requests-mock",
         ],
     },
     python_requires='>=3.6',
