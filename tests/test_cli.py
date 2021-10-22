@@ -1,7 +1,11 @@
 """System tests for the command line interface."""
+import pathlib
 import subprocess
 import filecmp
-from utils import TESTDATA_DIR
+
+
+# Directory containing unit test input files, etc.
+TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
 
 
 def test_version():
