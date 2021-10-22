@@ -1,14 +1,9 @@
 """
 System tests for the command line interface.
 """
-import pathlib
 import subprocess
 import filecmp
-
-
-# Directory containing unit test input files, mapper executables,
-# reducer executables, etc.
-TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
+from utils import TESTDATA_DIR
 
 
 def test_version():
@@ -37,7 +32,7 @@ def test_help():
 def test_simple(tmpdir):
     """Run a simple MapReduce job and verify the output."""
     with tmpdir.as_cwd():
-        result = subprocess.run(
+        subprocess.run(
             [
                 "madoop",
                 "-input", str(TESTDATA_DIR/"word_count/input"),
@@ -54,4 +49,3 @@ def test_simple(tmpdir):
             TESTDATA_DIR/"word_count/correct"/basename,
             shallow=False,
         )
-    
