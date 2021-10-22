@@ -44,7 +44,7 @@ def test_simple(tmpdir):
             check=True,
         )
     for basename in ["part-00000", "part-00001", "part-00002", "part-00003"]:
-        filecmp.cmp(
+        assert filecmp.cmp(
             tmpdir/"output"/basename,
             TESTDATA_DIR/"word_count/correct"/basename,
             shallow=False,
