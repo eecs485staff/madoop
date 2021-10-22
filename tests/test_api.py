@@ -1,7 +1,11 @@
 """System tests for the API interface."""
+import pathlib
 import filecmp
-from utils import TESTDATA_DIR
-import hadoop
+import madoop
+
+
+# Directory containing unit test input files, etc.
+TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
 
 
 def test_simple(tmpdir):
@@ -13,10 +17,9 @@ def test_simple(tmpdir):
             map_exe=str(TESTDATA_DIR/"word_count/map.py"),
             reduce_exe=str(TESTDATA_DIR/"word_count/reduce.py"),
         )
-    correct = TESTDATA_DIR/"word_count/correct"
-    for basename in correct.listdir():
+    for path in (TESTDATA_DIR/"word_count/correct").glob("part-*"):
         assert filecmp.cmp(
-            tmpdir/"output"/basename,
-            TESTDATA_DIR/"word_count/correct"/basename,
+            path,
+            TESTDATA_DIR/"word_count/correct"/path,
             shallow=False,
         )
