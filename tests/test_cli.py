@@ -1,6 +1,4 @@
-"""
-System tests for the command line interface.
-"""
+"""System tests for the command line interface."""
 import subprocess
 import filecmp
 from utils import TESTDATA_DIR
@@ -35,17 +33,17 @@ def test_simple(tmpdir):
         subprocess.run(
             [
                 "madoop",
-                "-input", str(TESTDATA_DIR/"word_count/input"),
+                "-input", TESTDATA_DIR/"word_count/input",
                 "-output", "output",
-                "-mapper", str(TESTDATA_DIR/"word_count/map.py"),
-                "-reducer", str(TESTDATA_DIR/"word_count/reduce.py"),
+                "-mapper", TESTDATA_DIR/"word_count/map.py",
+                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
             ],
             stdout=subprocess.PIPE,
             check=True,
         )
-    for basename in ["part-00000", "part-00001", "part-00002", "part-00003"]:
+    for path in (TESTDATA_DIR/"word_count/correct").glob("part-*"):
         assert filecmp.cmp(
-            tmpdir/"output"/basename,
-            TESTDATA_DIR/"word_count/correct"/basename,
+            path,
+            TESTDATA_DIR/"word_count/correct"/path,
             shallow=False,
         )
