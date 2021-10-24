@@ -1,6 +1,4 @@
-"""
-System tests for the map stage of Michigan Hadoop.
-"""
+"""System tests for the map stage of Michigan Hadoop."""
 import pathlib
 import filecmp
 import madoop
@@ -11,7 +9,7 @@ TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
 
 
 def test_map_stage(tmpdir):
-    """Test the map stage using word count example"""
+    """Test the map stage using word count example."""
     madoop.__main__.map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-input",
@@ -27,7 +25,7 @@ def test_map_stage(tmpdir):
 
 
 def test_group_stage(tmpdir):
-    """Test group stage using word count example"""
+    """Test group stage using word count example."""
     madoop.__main__.group_stage(
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-output",
         output_dir=tmpdir,
@@ -40,7 +38,7 @@ def test_group_stage(tmpdir):
 
 
 def test_reduce_stage(tmpdir):
-    """Test reduce stage using word count example"""
+    """Test reduce stage using word count example."""
     madoop.__main__.reduce_stage(
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/grouper-output",
