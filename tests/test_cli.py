@@ -49,3 +49,20 @@ def test_simple(tmpdir):
     actual_list = sorted(pathlib.Path(tmpdir/"output").glob("part-*"))
     for correct, actual in zip(correct_list, actual_list):
         assert filecmp.cmp(correct, actual, shallow=False)
+
+
+def test_hadoop_arguments(tmpdir):
+    """Include the required Hadoop arguments, which should be ignored."""
+    with tmpdir.as_cwd():
+        subprocess.run(
+            [
+                "madoop",
+                "jar", "hadoop-streaming-2.7.2.jar",  # Hadoop args
+                "-input", TESTDATA_DIR/"word_count/input",
+                "-output", "output",
+                "-mapper", TESTDATA_DIR/"word_count/map.py",
+                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+            ],
+            stdout=subprocess.PIPE,
+            check=True,
+        )
