@@ -1,1 +1,3 @@
-"""Michigan Hadoop CLI API"""
+"""Michigan Hadoop CLI API."""
+
+from .__main__ import hadoop

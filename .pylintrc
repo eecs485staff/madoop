@@ -1,13 +1,7 @@
-[SIMILARITIES]
+[MASTER]
 
-# Minimum lines number of a similarity.
-min-similarity-lines=10
+# A comma-separated list of package or module names from where C extensions may
+# be loaded. Extensions are loading into the active Python interpreter and may
+# run arbitrary code.
+extension-pkg-allow-list=math
 
-# Ignore comments when computing similarities.
-ignore-comments=yes
-
-# Ignore docstrings when computing similarities.
-ignore-docstrings=yes
-
-# Ignore imports when computing similarities.
-ignore-imports=yes

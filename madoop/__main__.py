@@ -136,7 +136,7 @@ def hadoop(input_dir, output_dir, map_exe, reduce_exe, enforce_keyspace=False):
         shutil.copy(filename, output_dir)
 
     # Remind user where to find output
-    print("Output directory: {}".format(output_dir))
+    print(f"Output directory: {output_dir}")
 
 
 def prepare_input_files(input_dir, output_dir):
@@ -152,7 +152,7 @@ def prepare_input_files(input_dir, output_dir):
     both simplicity and because our use case has smaller inputs we use 1.
 
     """
-    assert input_dir.is_dir(), "Can't find input_dir '{}'".format(input_dir)
+    assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
 
     # Count input files
     filenames = []
@@ -173,7 +173,7 @@ def prepare_input_files(input_dir, output_dir):
         part_num += num_split
 
         # copy to new files
-        with in_file.open() as file:
+        with in_file.open(encoding="utf-8") as file:
             with ExitStack() as stack:
                 out_files = [
                     stack.enter_context(file2.open('w'))
@@ -187,7 +187,7 @@ def prepare_input_files(input_dir, output_dir):
 def check_num_keys(filename):
     """Check num keys."""
     key_instances = 0
-    with open(filename) as file:
+    with open(filename, encoding="utf-8") as file:
         for _ in file:
             key_instances += 1
 
@@ -220,7 +220,7 @@ def part_filename(num):
     part_filename(3) = "part-00003"
 
     """
-    return 'part-{:05d}'.format(num)
+    return f"part-{num:05d}"
 
 
 def map_stage(exe, input_dir, output_dir, num_map, enforce_keyspace):
@@ -228,7 +228,7 @@ def map_stage(exe, input_dir, output_dir, num_map, enforce_keyspace):
     for i in range(num_map):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
-        print("+ {} < {} > {}".format(exe.name, input_path, output_path))
+        print(f"+ {exe.name} < {input_path} > {output_path}")
         with input_path.open() as infile, output_path.open('w') as outfile:
             subprocess.run(
                 str(exe),
@@ -249,20 +249,20 @@ def group_stage_cat_sort(input_dir, sorted_output_filename):
     sort order.
     """
     input_filenames = input_dir.glob("*")
-    with open(sorted_output_filename, 'w') as outfile:
-        cat_proc = subprocess.Popen(
+    with open(sorted_output_filename, 'w', encoding='utf-8') as outfile:
+        with subprocess.Popen(
             ["cat", *input_filenames],
             stdout=subprocess.PIPE,
             env={'LC_ALL': 'C.UTF-8'},
-        )
-        sort_proc = subprocess.Popen(
-            ["sort"],
-            stdin=cat_proc.stdout,
-            stdout=outfile,
-            env={'LC_ALL': 'C.UTF-8'},
-        )
-        cat_proc.wait()
-        sort_proc.wait()
+        ) as cat_proc, \
+            subprocess.Popen(
+                ["sort"],
+                stdin=cat_proc.stdout,
+                stdout=outfile,
+                env={'LC_ALL': 'C.UTF-8'},
+        ) as sort_proc:
+            cat_proc.wait()
+            sort_proc.wait()
     assert cat_proc.returncode == 0
     assert sort_proc.returncode == 0
 
@@ -277,7 +277,7 @@ def group_stage(input_dir, output_dir):
 
     """
     sorted_output_filename = output_dir/'sorted.out'
-    print("+ cat {}/* | sort > {}".format(input_dir, sorted_output_filename))
+    print(f"+ cat {input_dir}/* | sort > {sorted_output_filename}")
 
     # Concatenate and sort
     group_stage_cat_sort(input_dir, sorted_output_filename)
@@ -321,8 +321,9 @@ def reduce_stage(exe, input_dir, output_dir, num_reduce, enforce_keyspace):
     for i in range(num_reduce):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
-        print("+ {} < {} > {}".format(exe.name, input_path, output_path))
-        with open(input_path) as infile, open(output_path, 'w') as outfile:
+        print(f"+ {exe.name} < {input_path} > {output_path}")
+        with open(input_path, encoding="utf-8") as infile, \
+             open(output_path, 'w', encoding="utf-8") as outfile:
             subprocess.run(
                 str(exe),
                 shell=True,
