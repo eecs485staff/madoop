@@ -19,9 +19,10 @@ import shutil
 import sys
 import pathlib
 import subprocess
-from pathlib import Path
 import math
+from pathlib import Path
 from contextlib import ExitStack
+from pkg_resources import get_distribution
 
 # Large input files are automatically split
 MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
@@ -44,7 +45,8 @@ def main():
     optional_args = parser.add_argument_group('optional arguments')
     optional_args.add_argument(
         '--version', action='version',
-        version='Fake Hadoop 1.0 by Andrew DeOrio <awdeorio@umich.edu>'
+        version=f'Fake Hadoop {get_distribution("madoop").version} \
+                by Andrew DeOrio <awdeorio@umich.edu>'
     )
 
     required_args = parser.add_argument_group('required arguments')
