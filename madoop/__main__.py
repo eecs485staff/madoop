@@ -70,7 +70,8 @@ def main():
         sys.exit(f"Error: {err}")
 
 
-def mapreduce(input_dir, output_dir, map_exe, reduce_exe, enforce_keyspace=False):
+def mapreduce(input_dir, output_dir, map_exe, reduce_exe,
+              enforce_keyspace=False):
     # pylint: disable-msg=too-many-arguments
     """End Point to run a hadoop job."""
     # Do not clobber existing output directory
