@@ -6,7 +6,7 @@ By Andrew DeOrio <awdeorio@umich.edu>
 January, 2019
 
 Supports a subset of the hadoop command line interface, for example:
-$ hadoop \
+$ madoop \
   jar $HADOOP_DIR/hadoop-streaming-2.7.2.jar \
   -input $HADOOP_DIR/sampleInput \
   -output $HADOOP_DIR/output \
@@ -56,7 +56,7 @@ def main():
     args, dummy = parser.parse_known_args()
 
     try:
-        hadoop(
+        mapreduce(
             input_dir=args.input,
             output_dir=args.output,
             map_exe=args.mapper,
@@ -70,7 +70,7 @@ def main():
         sys.exit(f"Error: {err}")
 
 
-def hadoop(input_dir, output_dir, map_exe, reduce_exe, enforce_keyspace=False):
+def mapreduce(input_dir, output_dir, map_exe, reduce_exe, enforce_keyspace=False):
     # pylint: disable-msg=too-many-arguments
     """End Point to run a hadoop job."""
     # Do not clobber existing output directory

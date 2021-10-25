@@ -1,3 +1,3 @@
 """Michigan Hadoop CLI API."""
 
-from .__main__ import hadoop
+from .__main__ import mapreduce
