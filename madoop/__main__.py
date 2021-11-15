@@ -166,7 +166,7 @@ def prepare_input_files(input_dir, output_dir):
     # Copy and rename input files
     part_num = 0
     for filename in filenames:
-        # determine the number of file to copy to (1 per 128 MB)
+        # Calculate the number of splits
         in_file = Path(filename)
         num_split = math.ceil(in_file.stat().st_size / MAX_INPUT_SPLIT_SIZE)
 
