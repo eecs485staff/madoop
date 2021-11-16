@@ -1,136 +1,94 @@
-Michigan Hadoop CLI
-=================
+Madoop: Michigan Hadoop
+=======================
 
-Michigan Hadoop CLI (`madoop`) is a light weight, Python-based Hadoop command line interface.
-
+Michigan Hadoop (`madoop`) is a light weight MapReduce framework intended for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
 ## Quick start
-
-Install madoop
-
+Install, run, check output.
 ```console
 $ pip install madoop
-$ madoop
-```
-
-Run a MapReduce job on data in `input_small`
-
-```console
-$ cd tests/testdata/input_small
-$ $ hadoop \
-  -input input \
-  -output output \
-  -mapper ./wc_map.sh \
-  -reducer ./wc_reduce.sh
-```
-
-Concactenate and print the output
-
-```console
-$ cat output/* | sort
+$ madoop \
+  -input example/input \
+  -output example/output \
+  -mapper example/map.py \
+  -reducer example/reduce.py
+$ cat example/output/part-*
 autograder	2
+world	1
 eecs485	1
 goodbye	1
 hello	3
-world	1
 ```
 
-## Install
-
-```console
-$ pip install madoop
-$ madoop
-```
 
 ## Example
-### Sample input 
+We'll walk through the example in the Quick Start again, providing more detail.
 
-#### file01
+FIXME: link to https://eecs485staff.github.io/p5-search-engine/hadoop_streaming.html
+
+## Install
+Install Madoop.  Your version might be different.
 ```console
-hadoop map reduce file map 
-map streaming file reduce 
-map reduce is cool
+$ pip install madoop
+$ madoop --version
+Madoop 0.1.0
 ```
-#### file02
+
+### Input
+We've provided two small input files.
 ```console
-hadoop file system
-google file system
-```
+$ cat input/input01.txt
+Hello World
+Bye World
+$ cat input/input02.txt
+Hello Hadoop
+Goodbye Hadoop
 
-#### map
-```python
-#!/usr/bin/env python3
-"""Map example."""
-
-import sys
-
-for line in sys.stdin:
-    words = line.split()
-    for word in words:
-        print(word + "\t1")
-
-```
-#### reduce
-```python
-#!/usr/bin/env python3
-"""Reduce example."""
-
-import sys
-import collections
-
-WORDDICT = {}
-for line in sys.stdin:
-    word = line.split("\t")[0]
-    if word in WORDDICT:
-        WORDDICT[word] += 1
-    else:
-        WORDDICT[word] = 1
-
-SORTEDDICT = collections.OrderedDict(sorted(WORDDICT.items()))
-for key in SORTEDDICT:
-    print(key, SORTEDDICT[key])
-
-```
-
-Run the MapReduce job. By default, there will be one mapper for each input file.
-
-- `jar hadoop/hadoop-streaming-2.7.2.jar` is required by the real Hadoop.  The simplified Hadoop Streaming work-a-like we provided ignores this argument.
+### Run
+Run the MapReduce job.  By default, there will be one mapper for each input file.  Large input files maybe segmented and processed by multiple mappers.
 - `-input DIRECTORY` input directory
 - `-output DIRECTORY` output directory
 - `-mapper FILE` mapper executable
 - `-reducer FILE` reducer executable
 
+Run a MapReduce word count job.
 ```console
-$ hadoop \
-  jar ../hadoop-streaming-2.7.2.jar \
-  -input input \
-  -output output \
-  -mapper ./map.py \
-  -reducer ./reduce.py
-Starting map stage
-+ ./map.py < output/hadooptmp/mapper-input/part-00000 > output/hadooptmp/mapper-output/part-00000
-+ ./map.py < output/hadooptmp/mapper-input/part-00001 > output/hadooptmp/mapper-output/part-00001
-Starting group stage
-+ cat output/hadooptmp/mapper-output/* | sort > output/hadooptmp/grouper-output/sorted.out
-Starting reduce stage
-+ reduce.py < output/hadooptmp/grouper-output/part-00000 > output/hadooptmp/reducer-output/part-00000
-+ reduce.py < output/hadooptmp/grouper-output/part-00001 > output/hadooptmp/reducer-output/part-00001
-+ reduce.py < output/hadooptmp/grouper-output/part-00002 > output/hadooptmp/reducer-output/part-00002
-+ reduce.py < output/hadooptmp/grouper-output/part-00003 > output/hadooptmp/reducer-output/part-00003
-Output directory: output
+$ madoop \
+    -input example/input \
+    -output example/output \
+    -mapper example/map.py \
+    -reducer example/reduce.py
 ```
 
-## Similarities and differences from real Hadoop
+### Output
+Concatenate and print output.
+```console
+$ ls example/output
+part-00000  part-00001  part-00002  part-00003
+$ cat example/output/part-*
+autograder	2
+world	1
+eecs485	1
+goodbye	1
+hello	3
+```
+
+
+## Comparison with Apache Hadoop
+Madoop implements a subset of the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.
+
 ### Similarities
-- Madoop supports similar command line arguments as real Hadoop.
-- Madoop supports multiple mappers and reducers.
+- Command line options.  Madoop implements a subset of Hadoop's CLI.
+- Support for multiple mappers and reducers.
+- Input to reduce executions is sorted by line.
 
 ### Differences
-- Madoop ignores the `jar hadoop/hadoop-streaming-2.7.2.jar` argument.
-- The real Hadoop works in a distributed environment whereas Madoop works in a single machine environment.
+- Madoop ignores the `jar hadoop/hadoop-streaming-2.7.2.jar` argument, if present
+- Madoop runs on a single machine.  Apache Hadoop supports many machines.
+
 
 ## Contributing
 Contributions from the community are welcome! Check out the [guide for contributing](CONTRIBUTING.md).
 
 ## Acknowledgments
-Michigan Hadoop CLI is written by Andrew DeOrio <awdeorio@umich.edu>.
+Michigan Hadoop is written by Andrew DeOrio <awdeorio@umich.edu>.
