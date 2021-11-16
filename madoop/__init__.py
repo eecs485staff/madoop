@@ -1,3 +1,3 @@
-"""Michigan Hadoop CLI API."""
+"""Madoop API."""
 
 from .__main__ import mapreduce

@@ -1,5 +1,5 @@
-Contributing to michigan-hadoop
-========================
+Contributing to Madoop
+======================
 
 ## Install development environment
 Set up a development virtual environment.

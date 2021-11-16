@@ -1,17 +1,8 @@
 #!/usr/bin/env python3
-r"""
-A lightweight, "fake" Hadoop workalike.
+"""A light weight MapReduce framework for education.
 
-By Andrew DeOrio <awdeorio@umich.edu>
-January, 2019
+Andrew DeOrio <awdeorio@umich.edu>
 
-Supports a subset of the hadoop command line interface, for example:
-$ madoop \
-  jar $HADOOP_DIR/hadoop-streaming-2.7.2.jar \
-  -input $HADOOP_DIR/sampleInput \
-  -output $HADOOP_DIR/output \
-  -mapper $EXEC_DIR/map.py \
-  -reducer $EXEC_DIR/reduce.py
 """
 import argparse
 import collections
@@ -32,14 +23,14 @@ MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 MAX_NUM_REDUCE = 4
 
 
-class HadoopError(Exception):
-    """Top level exception raised by Fake Hadoop functions."""
+class MadoopError(Exception):
+    """Top level exception raised by Madoop functions."""
 
 
 def main():
-    """Obtain command line arguments and run the hadoop job."""
+    """Parse command line arguments and options then call mapreduce()."""
     parser = argparse.ArgumentParser(
-        description='Lightweight Hadoop work-alike.'
+        description='A light weight MapReduce framework for education.'
     )
 
     optional_args = parser.add_argument_group('optional arguments')
@@ -68,18 +59,19 @@ def main():
         sys.exit(
             f"Error: Command return non-zero exit status {err.returncode}"
         )
-    except HadoopError as err:
+    except MadoopError as err:
         sys.exit(f"Error: {err}")
 
 
 def mapreduce(input_dir, output_dir, map_exe, reduce_exe,
               enforce_keyspace=False):
+    """Madoop API."""
     # pylint: disable-msg=too-many-arguments
-    """End Point to run a hadoop job."""
+
     # Do not clobber existing output directory
     output_dir = Path(output_dir)
     if output_dir.exists():
-        raise HadoopError(f"Output directory already exists: {output_dir}")
+        raise MadoopError(f"Output directory already exists: {output_dir}")
 
     # Create tmp directories, starting with {ouput_dir}/hadooptmp
     tmpdir = pathlib.Path(output_dir)/"hadooptmp"
@@ -150,9 +142,9 @@ def prepare_input_files(input_dir, output_dir):
     bytes and write block to output_dir. Input files will never be combined.
 
     Return the number of files created. This will be the number of mappers
-    since we will assume that the number of tasks per mapper is 1.
-    The real Hadoop has a configurable number of tasks per mapper, however for
-    both simplicity and because our use case has smaller inputs we use 1.
+    since we will assume that the number of tasks per mapper is 1.  Apache
+    Hadoop has a configurable number of tasks per mapper, however for both
+    simplicity and because our use case has smaller inputs we use 1.
 
     """
     assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
@@ -196,7 +188,7 @@ def check_num_keys(filename):
 
     # implies we are dumping everything into one key
     if key_instances == 1:
-        raise HadoopError('Single key detected')
+        raise MadoopError('Single key detected')
 
 
 def check_shebang(exe):
@@ -210,17 +202,18 @@ def check_shebang(exe):
     with exe.open() as infile:
         line = infile.readline().rstrip()
     if line != "#!/usr/bin/env python3":
-        raise HadoopError(
+        raise MadoopError(
             f"{exe}: invalid shebang on first line '{line}'.  "
             "Expected '#!/usr/bin/env python3'"
         )
 
 
 def part_filename(num):
-    """Return a filename conforming to the Hadoop convention.
+    """Return a string conforming to the output filename convention.
 
-    EXAMPLE:
-    part_filename(3) = "part-00003"
+    EXAMPLE
+    >>> part_filename(3)
+    'part-00003'
 
     """
     return f"part-{num:05d}"
