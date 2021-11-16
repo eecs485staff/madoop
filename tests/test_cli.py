@@ -16,9 +16,8 @@ def test_version():
         check=True,
     )
     output = result.stdout.decode("utf-8")
-    assert "Fake Hadoop" in output
+    assert "Madoop" in output
     assert get_distribution("madoop").version in output
-    assert "by Andrew DeOrio <awdeorio@umich.edu>" in output
 
 
 def test_help():
