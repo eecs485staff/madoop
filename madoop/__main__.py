@@ -43,10 +43,10 @@ def main():
     )
 
     optional_args = parser.add_argument_group('optional arguments')
+    version = get_distribution("madoop").version
     optional_args.add_argument(
         '--version', action='version',
-        version=f'Fake Hadoop {get_distribution("madoop").version} \
-                by Andrew DeOrio <awdeorio@umich.edu>'
+        version=f'Madoop {version}'
     )
 
     required_args = parser.add_argument_group('required arguments')
