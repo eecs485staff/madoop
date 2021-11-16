@@ -21,7 +21,7 @@ setuptools.setup(
     license="MIT",
     packages=["madoop"],
     keywords=[
-        "madoop", "michigan hadoop",
+        "madoop", "Hadoop", "MapReduce", "Michigan Hadoop", "Hadoop Streaming"
     ],
     install_requires=[],
     extras_require={
