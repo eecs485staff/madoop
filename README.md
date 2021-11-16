@@ -4,7 +4,7 @@ Madoop: Michigan Hadoop
 Michigan Hadoop (`madoop`) is a light weight MapReduce framework intended for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
 ## Quick start
-Install, run, check output.
+Install and run an example word count MapReduce program.
 ```console
 $ pip install madoop
 $ madoop \
@@ -61,7 +61,7 @@ $ madoop \
 ```
 
 ### Output
-Concatenate and print output.
+Concatenate and print output.  While each output file in our example is sorted, the concatenation of the three files may not be sorted.
 ```console
 $ ls example/output
 part-00000  part-00001  part-00002  part-00003
@@ -75,20 +75,30 @@ hello	3
 
 
 ## Comparison with Apache Hadoop
-Madoop implements a subset of the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.
+Madoop implements a subset of the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  You can simulate the Hadoop Streaming interface at the command line with `cat` and `sort`.
 
-### Similarities
-- Command line options.  Madoop implements a subset of Hadoop's CLI.
-- Support for multiple mappers and reducers.
-- Input to reduce executions is sorted by line.
+FIXME: should probably move this somewhere else
+```console
+$ cat input/* | ./map.py | sort | ./reduce.py
+autograder	2
+eecs485	1
+goodbye	1
+hello	3
+world	1
+```
 
-### Differences
-- Madoop ignores the `jar hadoop/hadoop-streaming-2.7.2.jar` argument, if present
-- Madoop runs on a single machine.  Apache Hadoop supports many machines.
+| Madoop | Hadoop | `cat`/`sort` |
+|-|-|-|
+| Hadoop CLI subset | Hadoop CLI | No CLI |
+| Multiple mappers and reducers | Multiple mappers and reducers | One mapper, one reducer |
+| Single machine | Many machines | Single Machine |
+| `jar hadoop/hadoop-streaming-2.7.2.jar` argument ignored | `jar hadoop/hadoop-streaming-2.7.2.jar` argument required | No arguments |
+| Groups sorted | Groups sorted | Groups sorted |
 
 
 ## Contributing
 Contributions from the community are welcome! Check out the [guide for contributing](CONTRIBUTING.md).
+
 
 ## Acknowledgments
 Michigan Hadoop is written by Andrew DeOrio <awdeorio@umich.edu>.
