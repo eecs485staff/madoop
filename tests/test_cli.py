@@ -53,7 +53,7 @@ def test_simple(tmpdir):
 
 
 def test_hadoop_arguments(tmpdir):
-    """Include the required Hadoop arguments, which should be ignored."""
+    """Hadoop Streaming arguments should be ignored."""
     with tmpdir.as_cwd():
         subprocess.run(
             [

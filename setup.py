@@ -1,4 +1,4 @@
-"""Michigan Hadoop CLI build and install configuration."""
+"""Madoop build and install configuration."""
 import pathlib
 import setuptools
 
@@ -11,13 +11,13 @@ LONG_DESCRIPTION = README.open(encoding="utf8").read()
 
 setuptools.setup(
     name="madoop",
-    description="An lightweight, easy to use, Python based Hadoop CLI",
+    description="A light weight MapReduce framework for education.",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     version="0.1.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
-    url="https://github.com/eecs485staff/michigan-hadoop/",
+    url="https://github.com/eecs485staff/madoop/",
     license="MIT",
     packages=["madoop"],
     keywords=[
