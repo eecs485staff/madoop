@@ -15,7 +15,6 @@ def test_map_stage(tmpdir):
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-input",
         output_dir=tmpdir,
         num_map=2,
-        enforce_keyspace=False,
     )
     correct_dir = TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-output"
     correct_list = sorted(correct_dir.glob("part-*"))
@@ -44,7 +43,6 @@ def test_reduce_stage(tmpdir):
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/grouper-output",
         output_dir=tmpdir,
         num_reduce=2,
-        enforce_keyspace=False,
     )
     correct_dir = TESTDATA_DIR/"word_count/correct/hadooptmp/reducer-output"
     correct_list = sorted(correct_dir.glob("part-*"))
