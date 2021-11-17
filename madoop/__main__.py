@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """A light weight MapReduce framework for education.
 
 Andrew DeOrio <awdeorio@umich.edu>
