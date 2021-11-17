@@ -62,11 +62,8 @@ def main():
         sys.exit(f"Error: {err}")
 
 
-def mapreduce(input_dir, output_dir, map_exe, reduce_exe,
-              enforce_keyspace=False):
+def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     """Madoop API."""
-    # pylint: disable-msg=too-many-arguments
-
     # Do not clobber existing output directory
     output_dir = Path(output_dir)
     if output_dir.exists():
@@ -105,7 +102,6 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe,
         input_dir=map_input_dir,
         output_dir=map_output_dir,
         num_map=num_map,
-        enforce_keyspace=enforce_keyspace,
     )
 
     # Run the grouping stage
@@ -122,7 +118,6 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe,
         input_dir=group_output_dir,
         output_dir=reduce_output_dir,
         num_reduce=num_reduce,
-        enforce_keyspace=enforce_keyspace,
     )
 
     # Move files from temporary output directory to user-specified output dir
@@ -218,7 +213,7 @@ def part_filename(num):
     return f"part-{num:05d}"
 
 
-def map_stage(exe, input_dir, output_dir, num_map, enforce_keyspace):
+def map_stage(exe, input_dir, output_dir, num_map):
     """Execute mappers."""
     for i in range(num_map):
         input_path = input_dir/part_filename(i)
@@ -232,9 +227,6 @@ def map_stage(exe, input_dir, output_dir, num_map, enforce_keyspace):
                 stdin=infile,
                 stdout=outfile,
             )
-
-        if enforce_keyspace:
-            check_num_keys(output_path)
 
 
 def group_stage_cat_sort(input_dir, sorted_output_filename):
@@ -311,7 +303,7 @@ def group_stage(input_dir, output_dir):
     return len(grouper_files)
 
 
-def reduce_stage(exe, input_dir, output_dir, num_reduce, enforce_keyspace):
+def reduce_stage(exe, input_dir, output_dir, num_reduce):
     """Execute reducers."""
     for i in range(num_reduce):
         input_path = input_dir/part_filename(i)
@@ -326,9 +318,6 @@ def reduce_stage(exe, input_dir, output_dir, num_reduce, enforce_keyspace):
                 stdin=infile,
                 stdout=outfile,
             )
-
-        if enforce_keyspace:
-            check_num_keys(output_path)
 
 
 if __name__ == '__main__':
