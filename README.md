@@ -35,12 +35,12 @@ Madoop 0.1.0
 ### Input
 We've provided two small input files.
 ```console
-$ cat input/input01.txt
-Hello World
-Bye World
-$ cat input/input02.txt
-Hello Hadoop
-Goodbye Hadoop
+$ cat example/input/input01.txt
+hello world
+hello eecs485
+$ cat example/input/input02.txt
+goodbye autograder
+hello autograder
 ```
 
 ### Run
@@ -61,7 +61,7 @@ $ madoop \
 Concatenate and print output.  The concatenation of multiple output files may not be sorted.
 ```console
 $ ls output
-part-00000  part-00001  part-00002  part-00003
+hadooptmp  part-00000  part-00001  part-00002  part-00003
 $ cat output/part-*
 autograder	2
 world	1
