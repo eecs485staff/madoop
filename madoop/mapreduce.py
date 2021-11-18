@@ -28,6 +28,10 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     if output_dir.exists():
         raise MadoopError(f"Output directory already exists: {output_dir}")
 
+    # Executable scripts must have valid shebangs
+    check_shebang(map_exe)
+    check_shebang(reduce_exe)
+
     # Create tmp directories, starting with {ouput_dir}/hadooptmp
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
@@ -47,10 +51,6 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
         reduce_exe = pathlib.Path(reduce_exe).resolve()
-
-        # Executable scripts must have valid shebangs
-        check_shebang(map_exe)
-        check_shebang(reduce_exe)
 
         # Run the mapping stage
         print("Starting map stage")
@@ -150,7 +150,8 @@ def check_shebang(exe):
     shebang.
 
     """
-    with exe.open() as infile:
+    exe = pathlib.Path(exe)
+    with exe.open(encoding="utf-8") as infile:
         line = infile.readline().rstrip()
     if line != "#!/usr/bin/env python3":
         raise MadoopError(
