@@ -29,57 +29,57 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         raise MadoopError(f"Output directory already exists: {output_dir}")
 
     # Create tmp directories, starting with {ouput_dir}/hadooptmp
-    tmpdir = tempfile.TemporaryDirectory(prefix="madoop-")
-    tmppath = pathlib.Path(tmpdir.name)
-    map_input_dir = tmppath/'mapper-input'
-    map_output_dir = tmppath/'mapper-output'
-    group_output_dir = tmppath/'grouper-output'
-    reduce_output_dir = tmppath/'reducer-output'
-    map_input_dir.mkdir()
-    map_output_dir.mkdir()
-    group_output_dir.mkdir()
-    reduce_output_dir.mkdir()
+    with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
+        tmpdir = pathlib.Path(tmpdir)
+        map_input_dir = tmpdir/'mapper-input'
+        map_output_dir = tmpdir/'mapper-output'
+        group_output_dir = tmpdir/'grouper-output'
+        reduce_output_dir = tmpdir/'reducer-output'
+        map_input_dir.mkdir()
+        map_output_dir.mkdir()
+        group_output_dir.mkdir()
+        reduce_output_dir.mkdir()
 
-    # Copy and rename input files: part-00000, part-00001, etc.
-    input_dir = pathlib.Path(input_dir)
-    num_map = prepare_input_files(input_dir, map_input_dir)
+        # Copy and rename input files: part-00000, part-00001, etc.
+        input_dir = pathlib.Path(input_dir)
+        num_map = prepare_input_files(input_dir, map_input_dir)
 
-    # Executables must be absolute paths
-    map_exe = pathlib.Path(map_exe).resolve()
-    reduce_exe = pathlib.Path(reduce_exe).resolve()
+        # Executables must be absolute paths
+        map_exe = pathlib.Path(map_exe).resolve()
+        reduce_exe = pathlib.Path(reduce_exe).resolve()
 
-    # Executable scripts must have valid shebangs
-    check_shebang(map_exe)
-    check_shebang(reduce_exe)
+        # Executable scripts must have valid shebangs
+        check_shebang(map_exe)
+        check_shebang(reduce_exe)
 
-    # Run the mapping stage
-    print("Starting map stage")
-    map_stage(
-        exe=map_exe,
-        input_dir=map_input_dir,
-        output_dir=map_output_dir,
-        num_map=num_map,
-    )
+        # Run the mapping stage
+        print("Starting map stage")
+        map_stage(
+            exe=map_exe,
+            input_dir=map_input_dir,
+            output_dir=map_output_dir,
+            num_map=num_map,
+        )
 
-    # Run the grouping stage
-    print("Starting group stage")
-    num_reduce = group_stage(
-        input_dir=map_output_dir,
-        output_dir=group_output_dir,
-    )
+        # Run the grouping stage
+        print("Starting group stage")
+        num_reduce = group_stage(
+            input_dir=map_output_dir,
+            output_dir=group_output_dir,
+        )
 
-    # Run the reducing stage
-    print("Starting reduce stage")
-    reduce_stage(
-        exe=reduce_exe,
-        input_dir=group_output_dir,
-        output_dir=reduce_output_dir,
-        num_reduce=num_reduce,
-    )
+        # Run the reducing stage
+        print("Starting reduce stage")
+        reduce_stage(
+            exe=reduce_exe,
+            input_dir=group_output_dir,
+            output_dir=reduce_output_dir,
+            num_reduce=num_reduce,
+        )
 
-    # Move files from temporary output directory to user-specified output dir
-    for filename in reduce_output_dir.glob("*"):
-        shutil.copy(filename, output_dir)
+        # Move files from temporary output directory to user-specified output dir
+        for filename in reduce_output_dir.glob("*"):
+            shutil.copy(filename, output_dir)
 
     # Remind user where to find output
     print(f"Output directory: {output_dir}")
