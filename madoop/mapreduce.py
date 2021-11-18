@@ -79,7 +79,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             num_reduce=num_reduce,
         )
 
-        # Move files from temporary output directory to user-specified output dir
+        # Move files from temporary output dir to user-specified output dir
         for filename in reduce_output_dir.glob("*"):
             shutil.copy(filename, output_dir)
 
