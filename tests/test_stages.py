@@ -1,7 +1,7 @@
 """System tests for the map stage of Michigan Hadoop."""
 import pathlib
 import filecmp
-import madoop
+from madoop.mapreduce import map_stage, group_stage, reduce_stage
 
 
 # Directory containing unit test input files, etc.
@@ -10,7 +10,7 @@ TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
 
 def test_map_stage(tmpdir):
     """Test the map stage using word count example."""
-    madoop.__main__.map_stage(
+    map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-input",
         output_dir=tmpdir,
@@ -25,7 +25,7 @@ def test_map_stage(tmpdir):
 
 def test_group_stage(tmpdir):
     """Test group stage using word count example."""
-    madoop.__main__.group_stage(
+    group_stage(
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-output",
         output_dir=tmpdir,
     )
@@ -38,7 +38,7 @@ def test_group_stage(tmpdir):
 
 def test_reduce_stage(tmpdir):
     """Test reduce stage using word count example."""
-    madoop.__main__.reduce_stage(
+    reduce_stage(
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/grouper-output",
         output_dir=tmpdir,
