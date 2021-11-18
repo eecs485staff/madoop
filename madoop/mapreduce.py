@@ -32,9 +32,11 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     check_shebang(map_exe)
     check_shebang(reduce_exe)
 
-    # Create tmp directories, starting with {ouput_dir}/hadooptmp
+    # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
+
+        # Create stage input and output directory
         map_input_dir = tmpdir/'mapper-input'
         map_output_dir = tmpdir/'mapper-output'
         group_output_dir = tmpdir/'grouper-output'
