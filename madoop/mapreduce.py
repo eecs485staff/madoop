@@ -9,6 +9,7 @@ import pathlib
 import subprocess
 import math
 import contextlib
+import tempfile
 from .exceptions import MadoopError
 
 
@@ -28,14 +29,12 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         raise MadoopError(f"Output directory already exists: {output_dir}")
 
     # Create tmp directories, starting with {ouput_dir}/hadooptmp
-    tmpdir = pathlib.Path(output_dir)/"hadooptmp"
-    if tmpdir.is_dir():
-        shutil.rmtree(tmpdir)
-    tmpdir.mkdir(parents=True, exist_ok=False)
-    map_input_dir = tmpdir/'mapper-input'
-    map_output_dir = tmpdir/'mapper-output'
-    group_output_dir = tmpdir/'grouper-output'
-    reduce_output_dir = tmpdir/'reducer-output'
+    tmpdir = tempfile.TemporaryDirectory(prefix="madoop-")
+    tmppath = pathlib.Path(tmpdir.name)
+    map_input_dir = tmppath/'mapper-input'
+    map_output_dir = tmppath/'mapper-output'
+    group_output_dir = tmppath/'grouper-output'
+    reduce_output_dir = tmppath/'reducer-output'
     map_input_dir.mkdir()
     map_output_dir.mkdir()
     group_output_dir.mkdir()
