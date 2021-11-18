@@ -19,7 +19,6 @@ build/
 
 # Test tools
 /.tox/
-/tmp/
 /.coverage*
 *,cover
 
@@ -35,4 +34,4 @@ build/
 *.DS_Store
 
 # Output directories
-*output
+/output
