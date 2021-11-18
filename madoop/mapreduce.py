@@ -8,8 +8,7 @@ import shutil
 import pathlib
 import subprocess
 import math
-from pathlib import Path
-from contextlib import ExitStack
+import contextlib
 from .exceptions import MadoopError
 
 
@@ -112,7 +111,7 @@ def prepare_input_files(input_dir, output_dir):
     part_num = 0
     for filename in filenames:
         # Calculate the number of splits
-        in_file = Path(filename)
+        in_file = pathlib.Path(filename)
         num_split = math.ceil(in_file.stat().st_size / MAX_INPUT_SPLIT_SIZE)
 
         # create num_split output files
@@ -122,7 +121,7 @@ def prepare_input_files(input_dir, output_dir):
 
         # copy to new files
         with in_file.open(encoding="utf-8") as file:
-            with ExitStack() as stack:
+            with contextlib.ExitStack() as stack:
                 out_files = [
                     stack.enter_context(file2.open('w'))
                     for file2 in out_filenames]
@@ -229,7 +228,7 @@ def group_stage(input_dir, output_dir):
     group_stage_cat_sort(input_dir, sorted_output_filename)
 
     # Write lines to grouper output files.  Round robin allocation by key.
-    with ExitStack() as stack:
+    with contextlib.ExitStack() as stack:
         grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
         sorted_output_file = stack.enter_context(sorted_output_filename.open())
         prev_key = None
