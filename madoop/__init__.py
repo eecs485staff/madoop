@@ -1,3 +1,7 @@
-"""Madoop API."""
+"""Madoop API.
 
-from .__main__ import mapreduce
+Andrew DeOrio <awdeorio@umich.edu>
+
+"""
+from .mapreduce import mapreduce
+from .exceptions import MadoopError
