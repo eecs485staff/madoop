@@ -2,7 +2,7 @@
 import pathlib
 import subprocess
 import filecmp
-from pkg_resources import get_distribution
+import pkg_resources
 
 # Directory containing unit test input files, etc.
 TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
@@ -17,7 +17,7 @@ def test_version():
     )
     output = result.stdout.decode("utf-8")
     assert "Madoop" in output
-    assert get_distribution("madoop").version in output
+    assert pkg_resources.get_distribution("madoop").version in output
 
 
 def test_help():
