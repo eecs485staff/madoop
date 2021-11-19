@@ -178,13 +178,19 @@ def map_stage(exe, input_dir, output_dir, num_map):
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
         with input_path.open() as infile, output_path.open('w') as outfile:
-            subprocess.run(
-                str(exe),
-                shell=True,
-                check=True,
-                stdin=infile,
-                stdout=outfile,
-            )
+            try:
+                subprocess.run(
+                    str(exe),
+                    shell=True,
+                    check=True,
+                    stdin=infile,
+                    stdout=outfile,
+                )
+            except subprocess.CalledProcessError as err:
+                raise MadoopError(
+                    f"Command returned non-zero: "
+                    f"{exe} < {input_path} > {output_path}"
+                ) from err
 
 
 def group_stage_cat_sort(input_dir, sorted_output_filename):
@@ -235,7 +241,7 @@ def group_stage(input_dir, output_dir):
         for lineno, line in enumerate(sorted_output_file):
             # Parse the line.  Must be two strings separated by a tab.
             assert '\t' in line, \
-                f"Error: missing TAB {sorted_output_filename}:{lineno}"
+                f"Missing TAB {sorted_output_filename}:{lineno}"
             key, _ = line.split('\t', maxsplit=1)
 
             # If it's a new key, ...
@@ -269,10 +275,16 @@ def reduce_stage(exe, input_dir, output_dir, num_reduce):
         print(f"+ {exe.name} < {input_path} > {output_path}")
         with open(input_path, encoding="utf-8") as infile, \
              open(output_path, 'w', encoding="utf-8") as outfile:
-            subprocess.run(
-                str(exe),
-                shell=True,
-                check=True,
-                stdin=infile,
-                stdout=outfile,
-            )
+            try:
+                subprocess.run(
+                    str(exe),
+                    shell=True,
+                    check=True,
+                    stdin=infile,
+                    stdout=outfile,
+                )
+            except subprocess.CalledProcessError as err:
+                raise MadoopError(
+                    f"Command returned non-zero: "
+                    f"{exe} < {input_path} > {output_path}"
+                ) from err
