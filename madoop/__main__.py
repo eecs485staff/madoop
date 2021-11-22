@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import argparse
 import sys
-import subprocess
 import pkg_resources
 from .mapreduce import mapreduce
 from .exceptions import MadoopError
@@ -46,10 +45,6 @@ def main():
             output_dir=args.output,
             map_exe=args.mapper,
             reduce_exe=args.reducer,
-        )
-    except subprocess.CalledProcessError as err:
-        sys.exit(
-            f"Error: Command return non-zero exit status {err.returncode}"
         )
     except MadoopError as err:
         sys.exit(f"Error: {err}")
