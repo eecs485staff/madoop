@@ -27,6 +27,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     output_dir = pathlib.Path(output_dir)
     if output_dir.exists():
         raise MadoopError(f"Output directory already exists: {output_dir}")
+    output_dir.mkdir()
 
     # Executable scripts must have valid shebangs
     check_shebang(map_exe)
