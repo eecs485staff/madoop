@@ -12,11 +12,11 @@ def test_map_stage(tmpdir):
     """Test the map stage using word count example."""
     map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
-        input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-input",
+        input_dir=TESTDATA_DIR/"word_count/correct/mapper-input",
         output_dir=tmpdir,
         num_map=2,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-output"
+    correct_dir = TESTDATA_DIR/"word_count/correct/mapper-output"
     correct_list = sorted(correct_dir.glob("part-*"))
     actual_list = sorted(pathlib.Path(tmpdir/"output").glob("part-*"))
     for correct, actual in zip(correct_list, actual_list):
@@ -26,10 +26,10 @@ def test_map_stage(tmpdir):
 def test_group_stage(tmpdir):
     """Test group stage using word count example."""
     group_stage(
-        input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/mapper-output",
+        input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=tmpdir,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/hadooptmp/grouper-output"
+    correct_dir = TESTDATA_DIR/"word_count/correct/grouper-output"
     correct_list = sorted(correct_dir.glob("part-*"))
     actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
     for correct, actual in zip(correct_list, actual_list):
@@ -40,11 +40,11 @@ def test_reduce_stage(tmpdir):
     """Test reduce stage using word count example."""
     reduce_stage(
         exe=TESTDATA_DIR/"word_count/reduce.py",
-        input_dir=TESTDATA_DIR/"word_count/correct/hadooptmp/grouper-output",
+        input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",
         output_dir=tmpdir,
         num_reduce=2,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/hadooptmp/reducer-output"
+    correct_dir = TESTDATA_DIR/"word_count/correct/reducer-output"
     correct_list = sorted(correct_dir.glob("part-*"))
     actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
     for correct, actual in zip(correct_list, actual_list):

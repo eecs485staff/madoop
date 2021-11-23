@@ -61,7 +61,7 @@ $ madoop \
 Concatenate and print output.  The concatenation of multiple output files may not be sorted.
 ```console
 $ ls output
-hadooptmp  part-00000  part-00001  part-00002  part-00003
+part-00000  part-00001  part-00002  part-00003
 $ cat output/part-*
 autograder	2
 world	1
