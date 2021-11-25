@@ -18,8 +18,8 @@ def test_map_stage(tmpdir):
     )
     correct_dir = TESTDATA_DIR/"word_count/correct/mapper-output"
     correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir/"output").glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
+    for correct in correct_list:
+        actual = tmpdir/correct.name
         assert filecmp.cmp(correct, actual, shallow=False)
 
 
@@ -31,8 +31,8 @@ def test_group_stage(tmpdir):
     )
     correct_dir = TESTDATA_DIR/"word_count/correct/grouper-output"
     correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
+    for correct in correct_list:
+        actual = tmpdir/correct.name
         assert filecmp.cmp(correct, actual, shallow=False)
 
 
@@ -42,10 +42,10 @@ def test_reduce_stage(tmpdir):
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",
         output_dir=tmpdir,
-        num_reduce=2,
+        num_reduce=4,
     )
     correct_dir = TESTDATA_DIR/"word_count/correct/reducer-output"
     correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
+    for correct in correct_list:
+        actual = tmpdir/correct.name
         assert filecmp.cmp(correct, actual, shallow=False)

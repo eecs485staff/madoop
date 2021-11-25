@@ -17,9 +17,9 @@ def test_simple(tmpdir):
             map_exe=str(TESTDATA_DIR/"word_count/map.py"),
             reduce_exe=str(TESTDATA_DIR/"word_count/reduce.py"),
         )
-    for path in (TESTDATA_DIR/"word_count/correct").glob("part-*"):
-        assert filecmp.cmp(
-            path,
-            TESTDATA_DIR/"word_count/correct"/path,
-            shallow=False,
-        )
+    correct_dir = TESTDATA_DIR/"word_count/correct/output"
+    correct_list = sorted(correct_dir.glob("part-*"))
+    for correct in correct_list:
+        actual = tmpdir/"output"/correct.name
+        assert filecmp.cmp(correct, actual, shallow=False)
+

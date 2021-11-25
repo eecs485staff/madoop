@@ -45,9 +45,10 @@ def test_simple(tmpdir):
             stdout=subprocess.PIPE,
             check=True,
         )
-    correct_list = sorted((TESTDATA_DIR/"word_count/correct").glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir/"output").glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
+    correct_dir = TESTDATA_DIR/"word_count/correct/output"
+    correct_list = sorted(correct_dir.glob("part-*"))
+    for correct in correct_list:
+        actual = tmpdir/"output"/correct.name
         assert filecmp.cmp(correct, actual, shallow=False)
 
 
