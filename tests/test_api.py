@@ -17,7 +17,7 @@ def test_simple(tmpdir):
             map_exe=str(TESTDATA_DIR/"word_count/map.py"),
             reduce_exe=str(TESTDATA_DIR/"word_count/reduce.py"),
         )
-    breakpoint()
+
     for correct in (TESTDATA_DIR/"word_count/correct/output").glob("part-*"):
         actual = tmpdir/"output"/correct.name
         assert filecmp.cmp(correct, actual, shallow=False)
