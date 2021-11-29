@@ -1,11 +1,8 @@
 """System tests for the command line interface."""
-import pathlib
 import subprocess
-import filecmp
 import pkg_resources
-
-# Directory containing unit test input files, etc.
-TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
+from . import utils
+from .utils import TESTDATA_DIR
 
 
 def test_version():
@@ -45,11 +42,10 @@ def test_simple(tmpdir):
             stdout=subprocess.PIPE,
             check=True,
         )
-    correct_dir = TESTDATA_DIR/"word_count/correct/output"
-    correct_list = sorted(correct_dir.glob("part-*"))
-    for correct in correct_list:
-        actual = tmpdir/"output"/correct.name
-        assert filecmp.cmp(correct, actual, shallow=False)
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
 
 
 def test_hadoop_arguments(tmpdir):
