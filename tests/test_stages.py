@@ -1,11 +1,7 @@
 """System tests for the map stage of Michigan Hadoop."""
-import pathlib
-import filecmp
 from madoop.mapreduce import map_stage, group_stage, reduce_stage
-
-
-# Directory containing unit test input files, etc.
-TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
+from . import utils
+from .utils import TESTDATA_DIR
 
 
 def test_map_stage(tmpdir):
@@ -16,11 +12,10 @@ def test_map_stage(tmpdir):
         output_dir=tmpdir,
         num_map=2,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/mapper-output"
-    correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir/"output").glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
-        assert filecmp.cmp(correct, actual, shallow=False)
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/mapper-output",
+        tmpdir,
+    )
 
 
 def test_group_stage(tmpdir):
@@ -29,11 +24,10 @@ def test_group_stage(tmpdir):
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=tmpdir,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/grouper-output"
-    correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
-        assert filecmp.cmp(correct, actual, shallow=False)
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/grouper-output",
+        tmpdir,
+    )
 
 
 def test_reduce_stage(tmpdir):
@@ -42,10 +36,9 @@ def test_reduce_stage(tmpdir):
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",
         output_dir=tmpdir,
-        num_reduce=2,
+        num_reduce=4,
     )
-    correct_dir = TESTDATA_DIR/"word_count/correct/reducer-output"
-    correct_list = sorted(correct_dir.glob("part-*"))
-    actual_list = sorted(pathlib.Path(tmpdir).glob("part-*"))
-    for correct, actual in zip(correct_list, actual_list):
-        assert filecmp.cmp(correct, actual, shallow=False)
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/reducer-output",
+        tmpdir,
+    )

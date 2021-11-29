@@ -1,25 +1,19 @@
 """System tests for the API interface."""
-import pathlib
-import filecmp
 import madoop
-
-
-# Directory containing unit test input files, etc.
-TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
+from . import utils
+from .utils import TESTDATA_DIR
 
 
 def test_simple(tmpdir):
     """Run a simple MapReduce job and verify the output."""
     with tmpdir.as_cwd():
         madoop.mapreduce(
-            input_dir=str(TESTDATA_DIR/"word_count/input"),
+            input_dir=TESTDATA_DIR/"word_count/input",
             output_dir="output",
-            map_exe=str(TESTDATA_DIR/"word_count/map.py"),
-            reduce_exe=str(TESTDATA_DIR/"word_count/reduce.py"),
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
         )
-    for path in (TESTDATA_DIR/"word_count/correct").glob("part-*"):
-        assert filecmp.cmp(
-            path,
-            TESTDATA_DIR/"word_count/correct"/path,
-            shallow=False,
-        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
