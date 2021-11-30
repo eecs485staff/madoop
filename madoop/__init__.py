@@ -1,3 +1,7 @@
-"""Michigan Hadoop CLI API."""
+"""Madoop API.
 
-from .__main__ import hadoop
+Andrew DeOrio <awdeorio@umich.edu>
+
+"""
+from .mapreduce import mapreduce
+from .exceptions import MadoopError

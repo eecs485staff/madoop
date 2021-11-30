@@ -4,7 +4,7 @@ name: CI
 # Define conditions for when to run this action
 on:
   pull_request: # Run on all pull requests
-  push: # Run on all pushes to master
+  push: # Run on all pushes to main
     branches:
       - main
       - develop
