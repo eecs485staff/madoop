@@ -1,6 +1,8 @@
 Madoop: Michigan Hadoop
 =======================
 
+[![PyPI](https://img.shields.io/pypi/v/madoop.svg)](https://pypi.org/project/madoop/)
+
 Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
 ## Quick start
