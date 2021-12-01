@@ -214,12 +214,14 @@ def keyhash(key):
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
-    Concatenate and sort input files to 'sorted.out'. Determine the number of
-    reducers and split 'sorted.out' into that many files.
+    Process each mapper output file, allocating lines to grouper output files
+    using the hash and modulo of the key.
 
     Return the number of reducers to be used in the reduce stage.
 
     """
+    # FIXME: move all this to a function that we can call once per file.  We no
+    # longer need to do it all in one pass.
     with contextlib.ExitStack() as stack:
 
         # Open input files
@@ -242,12 +244,14 @@ def group_stage(input_dir, output_dir):
     for path in output_dir.iterdir():
         sort_file(path)
 
-    # Remove empty output files.  We won't always use the maximum number of
-    # reducers because some MapReduce programs have fewer intermediate keys.
+    # FIXME Remove empty output files.  We won't always use the maximum number
+    # of reducers because some MapReduce programs have fewer intermediate keys.
+    #
     # for path in output_dir.iterdir():
     #     if path.stat().st_size == 0 :
     #         path.unlink()
 
+    # FIXME remove this and just count files
     # Number of grouper output files = number of reducers
     return len(outfiles)
 
