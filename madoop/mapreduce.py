@@ -220,25 +220,12 @@ def group_stage(input_dir, output_dir):
     Return the number of reducers to be used in the reduce stage.
 
     """
-    # Sort input files
-    for path in input_dir.iterdir():
-        sort_file(path)
-
-    # Write lines to grouper output files.  Round robin allocation by key.
     with contextlib.ExitStack() as stack:
 
         # Open input files
         infiles = [stack.enter_context(p.open()) for p in input_dir.iterdir()]
 
         # Open output files
-        #
-        # FIXME: we'll need to remove empty output fiels becasue Output files
-        # will be opened as needed.  We won't always use the maximum number of
-        # reducers because some MapReduce programs have fewer intermediate
-        # keys.
-        #
-        # FIXME: could we have a weird case where the output filenames are
-        # part-00000 and part-00002 ?
         outfiles = []
         for i in range(MAX_NUM_REDUCE):
             outpath = output_dir/part_filename(i)
@@ -250,6 +237,16 @@ def group_stage(input_dir, output_dir):
             key = line.partition('\t')[0]
             reducer_idx = keyhash(key) % MAX_NUM_REDUCE
             outfiles[reducer_idx].write(line)
+
+    # Sort output files
+    for path in output_dir.iterdir():
+        sort_file(path)
+
+    # Remove empty output files.  We won't always use the maximum number of
+    # reducers because some MapReduce programs have fewer intermediate keys.
+    # for path in output_dir.iterdir():
+    #     if path.stat().st_size == 0 :
+    #         path.unlink()
 
     # Number of grouper output files = number of reducers
     return len(outfiles)
