@@ -39,7 +39,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         tmpdir = pathlib.Path(tmpdir)
 
         # Create stage input and output directory
-        map_input_dir = tmpdir/'mapper-input'  # FIXME change to input
+        map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
         group_output_dir = tmpdir/'grouper-output'
         reduce_output_dir = tmpdir/'reducer-output'
