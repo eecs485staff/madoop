@@ -9,11 +9,11 @@ from .utils import TESTDATA_DIR
 def test_map_stage(tmpdir):
     """Test the map stage using word count example."""
     # Copy input files to tmpdir
-    input_dir = Path(tmpdir)/"mapper-input"
+    input_dir = Path(tmpdir)/"input"
     output_dir = Path(tmpdir)/"grouper-output"
     output_dir.mkdir()
     shutil.copytree(
-        TESTDATA_DIR/"word_count/correct/mapper-input",
+        TESTDATA_DIR/"word_count/correct/input",
         input_dir,
     )
 
