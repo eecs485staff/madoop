@@ -27,7 +27,7 @@ def assert_dirs_eq(dir1, dir2):
     assert all(p.is_file() for p in paths1)
     assert all(p.is_file() for p in paths2)
     assert len(paths1) == len(paths2), (
-        "Number of output files does not match\n"
+        "Number of output files does not match:\n"
         f"dir1 = {dir1}\n"
         f"dir2 = {dir2}\n"
         f"number of files in dir1 = {len(paths1)}\n"
@@ -36,4 +36,8 @@ def assert_dirs_eq(dir1, dir2):
 
     # Compare files pairwise
     for path1, path2 in zip(sorted(paths1), sorted(paths2)):
-        assert filecmp.cmp(path1, path2, shallow=False)
+        assert filecmp.cmp(path1, path2, shallow=False), (
+            "Files do not match:\n"
+            f"path1 = {path1}\n"
+            f"path2 = {path2}\n"
+        )
