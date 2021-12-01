@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import contextlib
 import hashlib
-import heapq
 import math
 import pathlib
 import shutil
@@ -211,6 +210,17 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
+def group_one(inpath, outpaths):
+    """Allocate lines of inpath among outpaths using hash of key."""
+    assert len(outpaths) == MAX_NUM_REDUCE
+    with contextlib.ExitStack() as stack:
+        outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
+        for line in stack.enter_context(inpath.open()):
+            key = line.partition('\t')[0]
+            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            outfiles[reducer_idx].write(line)
+
+
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
@@ -220,25 +230,14 @@ def group_stage(input_dir, output_dir):
     Return the number of reducers to be used in the reduce stage.
 
     """
-    # FIXME: move all this to a function that we can call once per file.  We no
-    # longer need to do it all in one pass.
-    with contextlib.ExitStack() as stack:
+    # Compute output filenames
+    outpaths = []
+    for i in range(MAX_NUM_REDUCE):
+        outpaths.append(output_dir/part_filename(i))
 
-        # Open input files
-        infiles = [stack.enter_context(p.open()) for p in input_dir.iterdir()]
-
-        # Open output files
-        outfiles = []
-        for i in range(MAX_NUM_REDUCE):
-            outpath = output_dir/part_filename(i)
-            outfiles.append(stack.enter_context(outpath.open("w")))
-
-        # Allocate sorted input lines to output files.  The output partition is
-        # the hash of the key.
-        for line in heapq.merge(*infiles):
-            key = line.partition('\t')[0]
-            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
-            outfiles[reducer_idx].write(line)
+    # Allocate input lines to output files
+    for inpath in input_dir.iterdir():
+        group_one(inpath, outpaths)
 
     # Sort output files
     for path in output_dir.iterdir():
@@ -253,7 +252,7 @@ def group_stage(input_dir, output_dir):
 
     # FIXME remove this and just count files
     # Number of grouper output files = number of reducers
-    return len(outfiles)
+    return len(outpaths)
 
 
 def reduce_stage(exe, input_dir, output_dir, num_reduce):
