@@ -4,11 +4,12 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 """
 import collections
-import shutil
-import pathlib
-import subprocess
-import math
 import contextlib
+import heapq
+import math
+import pathlib
+import shutil
+import subprocess
 import tempfile
 from .exceptions import MadoopError
 
@@ -196,31 +197,6 @@ def map_stage(exe, input_dir, output_dir, num_map):
                 ) from err
 
 
-def group_stage_cat_sort(input_dir, sorted_output_filename):
-    """Concatenate and sort input files, saving to 'sorted_ouput_filename'.
-
-    Set the locale with the LC_ALL environment variable to force an ASCII
-    sort order.
-    """
-    input_filenames = input_dir.glob("*")
-    with open(sorted_output_filename, 'w', encoding='utf-8') as outfile:
-        with subprocess.Popen(
-            ["cat", *input_filenames],
-            stdout=subprocess.PIPE,
-            env={'LC_ALL': 'C.UTF-8'},
-        ) as cat_proc, \
-            subprocess.Popen(
-                ["sort"],
-                stdin=cat_proc.stdout,
-                stdout=outfile,
-                env={'LC_ALL': 'C.UTF-8'},
-        ) as sort_proc:
-            cat_proc.wait()
-            sort_proc.wait()
-    assert cat_proc.returncode == 0
-    assert sort_proc.returncode == 0
-
-
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
@@ -230,21 +206,36 @@ def group_stage(input_dir, output_dir):
     Return the number of reducers to be used in the reduce stage.
 
     """
-    sorted_output_filename = output_dir/'sorted.out'
-    print(f"+ cat {input_dir}/* | sort > {sorted_output_filename}")
+    # Sort each mapper output file AKA grouper input file
+    sorted_paths = []
+    for inpath in input_dir.iterdir():
+        # FIXME use tmpdir instead of file
+        outpath = inpath.with_suffix(".sorted")
+        sorted_paths.append(outpath)
+        assert not outpath.exists()
+        with inpath.open() as infile, outpath.open("w") as outfile:
+            for line in sorted(infile):
+                print(f"DEBUG {outfile}")
+                outfile.write(line)
 
-    # Concatenate and sort
-    group_stage_cat_sort(input_dir, sorted_output_filename)
+    assert sorted_paths
 
     # Write lines to grouper output files.  Round robin allocation by key.
     with contextlib.ExitStack() as stack:
         grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
-        sorted_output_file = stack.enter_context(sorted_output_filename.open())
+
+        # Open input files, reading line-by-line in sorted order
+        infiles = [stack.enter_context(p.open()) for p in sorted_paths]
+
         prev_key = None
-        for lineno, line in enumerate(sorted_output_file):
+        for lineno, line in enumerate(heapq.merge(*infiles)):
             # Parse the line.  Must be two strings separated by a tab.
-            assert '\t' in line, \
-                f"Missing TAB {sorted_output_filename}:{lineno}"
+
+            # FIXME put this assertion back in
+            # assert '\t' in line, \
+            #     f"Missing TAB {sorted_output_filename}:{lineno}"
+
+            # FIXME use partition
             key, _ = line.split('\t', maxsplit=1)
 
             # If it's a new key, ...
