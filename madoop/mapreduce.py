@@ -3,8 +3,8 @@
 Andrew DeOrio <awdeorio@umich.edu>
 
 """
-import collections
 import contextlib
+import hashlib
 import heapq
 import math
 import pathlib
@@ -205,6 +205,12 @@ def sort_file(path):
         outfile.writelines(sorted_lines)
 
 
+def keyhash(key):
+    """Hash key and return an integer."""
+    hexdigest = hashlib.md5(key.encode("utf-8")).hexdigest()
+    return int(hexdigest, base=16)
+
+
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
@@ -221,36 +227,32 @@ def group_stage(input_dir, output_dir):
     # Write lines to grouper output files.  Round robin allocation by key.
     with contextlib.ExitStack() as stack:
 
-        # Open input files, reading line-by-line in sorted order
+        # Open input files
         infiles = [stack.enter_context(p.open()) for p in input_dir.iterdir()]
 
-        grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
-        prev_key = None
+        # Open output files
+        #
+        # FIXME: we'll need to remove empty output fiels becasue Output files
+        # will be opened as needed.  We won't always use the maximum number of
+        # reducers because some MapReduce programs have fewer intermediate
+        # keys.
+        #
+        # FIXME: could we have a weird case where the output filenames are
+        # part-00000 and part-00002 ?
+        outfiles = []
+        for i in range(MAX_NUM_REDUCE):
+            outpath = output_dir/part_filename(i)
+            outfiles.append(stack.enter_context(outpath.open("w")))
+
+        # Allocate sorted input lines to output files.  The output partition is
+        # the hash of the key.
         for line in heapq.merge(*infiles):
-            # Parse key from tab-separated key-value pair
             key = line.partition('\t')[0]
-
-            # If it's a new key, ...
-            if key != prev_key:
-                # Update prev_key
-                prev_key = key
-
-                # If using less than the maximum number of reducers, create and
-                # open a new grouper output file.
-                num_grouper_files = len(grouper_files)
-                if num_grouper_files < MAX_NUM_REDUCE:
-                    filename = output_dir/part_filename(num_grouper_files)
-                    file = filename.open('w')
-                    grouper_files.append(stack.enter_context(file))
-
-                # Rotate circular queue of grouper files
-                grouper_files.rotate(1)
-
-            # Write to grouper output file
-            grouper_files[0].write(line)
+            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            outfiles[reducer_idx].write(line)
 
     # Number of grouper output files = number of reducers
-    return len(grouper_files)
+    return len(outfiles)
 
 
 def reduce_stage(exe, input_dir, output_dir, num_reduce):
