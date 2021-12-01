@@ -209,8 +209,7 @@ def group_stage(input_dir, output_dir):
     # Sort each mapper output file AKA grouper input file
     sorted_paths = []
     for inpath in input_dir.iterdir():
-        # FIXME use tmpdir instead of file
-        outpath = inpath.with_suffix(".sorted")
+        outpath = output_dir/f"mapper-output-{inpath.name}.sorted"
         sorted_paths.append(outpath)
         assert not outpath.exists()
         with inpath.open() as infile, outpath.open("w") as outfile:
@@ -218,25 +217,19 @@ def group_stage(input_dir, output_dir):
                 print(f"DEBUG {outfile}")
                 outfile.write(line)
 
-    assert sorted_paths
-
     # Write lines to grouper output files.  Round robin allocation by key.
     with contextlib.ExitStack() as stack:
         grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
 
         # Open input files, reading line-by-line in sorted order
+        assert sorted_paths
         infiles = [stack.enter_context(p.open()) for p in sorted_paths]
 
         prev_key = None
         for lineno, line in enumerate(heapq.merge(*infiles)):
             # Parse the line.  Must be two strings separated by a tab.
-
-            # FIXME put this assertion back in
-            # assert '\t' in line, \
-            #     f"Missing TAB {sorted_output_filename}:{lineno}"
-
-            # FIXME use partition
-            key, _ = line.split('\t', maxsplit=1)
+            assert '\t' in line, f"Missing TAB: {line.strip()}"
+            key = line.partition('\t')[0]
 
             # If it's a new key, ...
             if key != prev_key:
