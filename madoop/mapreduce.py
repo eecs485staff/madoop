@@ -197,6 +197,14 @@ def map_stage(exe, input_dir, output_dir, num_map):
                 ) from err
 
 
+def sort_file(path):
+    """Sort contents of path, overwriting it."""
+    with path.open() as infile:
+        sorted_lines = sorted(infile)
+    with path.open("w") as outfile:
+        outfile.writelines(sorted_lines)
+
+
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
@@ -206,28 +214,20 @@ def group_stage(input_dir, output_dir):
     Return the number of reducers to be used in the reduce stage.
 
     """
-    # Sort each mapper output file AKA grouper input file
-    sorted_paths = []
-    for inpath in input_dir.iterdir():
-        outpath = output_dir/f"mapper-output-{inpath.name}.sorted"
-        sorted_paths.append(outpath)
-        assert not outpath.exists()
-        with inpath.open() as infile, outpath.open("w") as outfile:
-            for line in sorted(infile):
-                outfile.write(line)
+    # Sort input files
+    for path in input_dir.iterdir():
+        sort_file(path)
 
     # Write lines to grouper output files.  Round robin allocation by key.
     with contextlib.ExitStack() as stack:
-        grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
 
         # Open input files, reading line-by-line in sorted order
-        assert sorted_paths
-        infiles = [stack.enter_context(p.open()) for p in sorted_paths]
+        infiles = [stack.enter_context(p.open()) for p in input_dir.iterdir()]
 
+        grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
         prev_key = None
-        for lineno, line in enumerate(heapq.merge(*infiles)):
-            # Parse the line.  Must be two strings separated by a tab.
-            assert '\t' in line, f"Missing TAB: {line.strip()}"
+        for line in heapq.merge(*infiles):
+            # Parse key from tab-separated key-value pair
             key = line.partition('\t')[0]
 
             # If it's a new key, ...
@@ -248,10 +248,6 @@ def group_stage(input_dir, output_dir):
 
             # Write to grouper output file
             grouper_files[0].write(line)
-
-    # Clean up sorted files
-    for sorted_path in sorted_paths:
-        pathlib.Path(sorted_path).unlink()
 
     # Number of grouper output files = number of reducers
     return len(grouper_files)
