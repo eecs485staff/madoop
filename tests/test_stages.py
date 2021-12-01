@@ -72,7 +72,6 @@ def test_reduce_stage(tmpdir):
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=input_dir,
         output_dir=output_dir,
-        num_reduce=4,
     )
 
     # Verify contents of output directory
