@@ -214,7 +214,6 @@ def group_stage(input_dir, output_dir):
         assert not outpath.exists()
         with inpath.open() as infile, outpath.open("w") as outfile:
             for line in sorted(infile):
-                print(f"DEBUG {outfile}")
                 outfile.write(line)
 
     # Write lines to grouper output files.  Round robin allocation by key.
@@ -249,6 +248,10 @@ def group_stage(input_dir, output_dir):
 
             # Write to grouper output file
             grouper_files[0].write(line)
+
+    # Clean up sorted files
+    for sorted_path in sorted_paths:
+        pathlib.Path(sorted_path).unlink()
 
     # Number of grouper output files = number of reducers
     return len(grouper_files)
