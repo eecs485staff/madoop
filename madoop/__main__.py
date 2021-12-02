@@ -10,14 +10,6 @@ from .mapreduce import mapreduce
 from .exceptions import MadoopError
 
 
-# Large input files are automatically split
-MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
-
-# The number of reducers is dynamically determined by the number of unique keys
-# but will not be more than MAX_NUM_REDUCE
-MAX_NUM_REDUCE = 4
-
-
 def main():
     """Parse command line arguments and options then call mapreduce()."""
     parser = argparse.ArgumentParser(
