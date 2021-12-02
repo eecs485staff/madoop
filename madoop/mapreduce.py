@@ -115,18 +115,17 @@ def prepare_input_files(input_dir, output_dir):
         num_split = math.ceil(in_file.stat().st_size / MAX_INPUT_SPLIT_SIZE)
 
         # create num_split output files
-        out_filenames = [
-            output_dir/part_filename(part_num + i) for i in range(num_split)]
+        outpaths = [
+            output_dir/part_filename(part_num + i) for i in range(num_split)
+        ]
         part_num += num_split
 
         # copy to new files
-        with in_file.open(encoding="utf-8") as file:
-            with contextlib.ExitStack() as stack:
-                out_files = [
-                    stack.enter_context(file2.open('w'))
-                    for file2 in out_filenames]
-                for i, line in enumerate(file):
-                    out_files[i % num_split].write(line)
+        with contextlib.ExitStack() as stack:
+            outfiles = [stack.enter_context(f.open('w')) for f in outpaths]
+            infile = stack.enter_context(in_file.open(encoding="utf-8"))
+            for i, line in enumerate(infile):
+                outfiles[i % num_split].write(line)
 
 
 def check_shebang(exe):
@@ -186,7 +185,7 @@ def group_stage_cat_sort(input_dir, sorted_output_filename):
     sort order.
     """
     input_filenames = input_dir.glob("*")
-    with open(sorted_output_filename, 'w', encoding='utf-8') as outfile:
+    with sorted_output_filename.open('w') as outfile:
         with subprocess.Popen(
             ["cat", *input_filenames],
             stdout=subprocess.PIPE,
@@ -254,8 +253,7 @@ def reduce_stage(exe, input_dir, output_dir):
     for i, input_path in enumerate(sorted(input_files)):
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
-        with open(input_path, encoding="utf-8") as infile, \
-             open(output_path, 'w', encoding="utf-8") as outfile:
+        with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
                     str(exe),
