@@ -209,7 +209,7 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def group_one(inpath, outpaths):
+def partition_keys(inpath, outpaths):
     """Allocate lines of inpath among outpaths using hash of key."""
     assert len(outpaths) == MAX_NUM_REDUCE
     with contextlib.ExitStack() as stack:
@@ -234,9 +234,9 @@ def group_stage(input_dir, output_dir):
     for i in range(MAX_NUM_REDUCE):
         outpaths.append(output_dir/part_filename(i))
 
-    # Allocate input lines to output files
+    # Parition input, appending to output files
     for inpath in input_dir.iterdir():
-        group_one(inpath, outpaths)
+        partition_keys(inpath, outpaths)
 
     # Sort output files
     for path in output_dir.iterdir():
