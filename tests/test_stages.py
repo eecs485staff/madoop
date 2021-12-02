@@ -10,7 +10,7 @@ def test_map_stage(tmpdir):
     map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
         input_dir=TESTDATA_DIR/"word_count/correct/input",
-        output_dir=tmpdir,
+        output_dir=Path(tmpdir),
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/mapper-output",
@@ -36,7 +36,7 @@ def test_reduce_stage(tmpdir):
     reduce_stage(
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",
-        output_dir=tmpdir,
+        output_dir=Path(tmpdir),
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/reducer-output",

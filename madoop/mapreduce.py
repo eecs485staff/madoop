@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import contextlib
 import hashlib
+import logging
 import math
 import pathlib
 import shutil
@@ -19,6 +20,9 @@ MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 # The number of reducers is dynamically determined by the number of unique keys
 # but will not be more than MAX_NUM_REDUCE
 MAX_NUM_REDUCE = 4
+
+# Madoop logger
+LOGGER = logging.getLogger(__name__)
 
 
 def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
@@ -36,6 +40,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
+        LOGGER.debug("tmpdir=%s", tmpdir)
 
         # Create stage input and output directory
         map_input_dir = tmpdir/'input'
@@ -56,7 +61,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         reduce_exe = pathlib.Path(reduce_exe).resolve()
 
         # Run the mapping stage
-        print("Starting map stage")
+        LOGGER.info("Starting map stage")
         map_stage(
             exe=map_exe,
             input_dir=map_input_dir,
@@ -64,14 +69,14 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         )
 
         # Run the grouping stage
-        print("Starting group stage")
+        LOGGER.info("Starting group stage")
         group_stage(
             input_dir=map_output_dir,
             output_dir=group_output_dir,
         )
 
         # Run the reducing stage
-        print("Starting reduce stage")
+        LOGGER.info("Starting reduce stage")
         reduce_stage(
             exe=reduce_exe,
             input_dir=group_output_dir,
@@ -83,7 +88,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             shutil.copy(filename, output_dir)
 
     # Remind user where to find output
-    print(f"Output directory: {output_dir}")
+    LOGGER.info("Output directory: %s", output_dir)
 
 
 def prepare_input_files(input_dir, output_dir):
@@ -156,7 +161,10 @@ def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, input_path.name, output_path.name
+        )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
@@ -211,11 +219,16 @@ def group_stage(input_dir, output_dir):
         outpaths.append(output_dir/part_filename(i))
 
     # Parition input, appending to output files
-    for inpath in input_dir.iterdir():
+    for inpath in sorted(input_dir.iterdir()):
+        LOGGER.debug(
+            "partition %s -> %s",
+            inpath.name, [i.name for i in outpaths],
+        )
         partition_keys(inpath, outpaths)
 
     # Sort output files
-    for path in output_dir.iterdir():
+    for path in sorted(output_dir.iterdir()):
+        LOGGER.debug("sort %s", path.name)
         sort_file(path)
 
     # Remove empty output files.  We won't always use the maximum number of
@@ -229,7 +242,10 @@ def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, input_path.name, output_path.name
+        )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
