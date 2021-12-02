@@ -37,7 +37,7 @@ def main():
     required_args.add_argument('-mapper', dest='mapper', required=True)
     required_args.add_argument('-reducer', dest='reducer', required=True)
 
-    args, dummy = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     try:
         mapreduce(
