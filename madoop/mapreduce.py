@@ -30,8 +30,8 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     output_dir.mkdir()
 
     # Executable scripts must have valid shebangs
-    check_shebang(map_exe)
-    check_shebang(reduce_exe)
+    is_executable(map_exe)
+    is_executable(reduce_exe)
 
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
@@ -123,22 +123,30 @@ def prepare_input_files(input_dir, output_dir):
                 outfiles[i % num_splits].write(line)
 
 
-def check_shebang(exe):
-    """Verify correct exe starts with '#!/usr/bin/env python3'.
+def is_executable(exe):
+    """Verify that exe is a valid executable.
 
-    We need to verify the shebang manually because subprocess.run() throws
-    confusing errors when it tries to execute a script with an error in the
-    shebang.
+    Tries to execute exe by running it with an empty string input
+    and checks that no error is thrown.
+
+    We need to verify the executable manually because subprocess.run() throws
+    confusing errors when it tries to execute an invalid executable.
 
     """
     exe = pathlib.Path(exe)
-    with exe.open(encoding="utf-8") as infile:
-        line = infile.readline().rstrip()
-    if line != "#!/usr/bin/env python3":
-        raise MadoopError(
-            f"{exe}: invalid shebang on first line '{line}'.  "
-            "Expected '#!/usr/bin/env python3'"
+    try:
+        subprocess.run(
+            str(exe),
+            shell=True,
+            input="".encode(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
         )
+    except subprocess.CalledProcessError as err:
+        raise MadoopError(
+            f"{exe} is not an executable script. "
+        ) from err
 
 
 def part_filename(num):
