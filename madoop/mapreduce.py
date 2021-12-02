@@ -124,16 +124,13 @@ def prepare_input_files(input_dir, output_dir):
 
 
 def is_executable(exe):
-    """Verify that exe is a valid executable.
+    """Verify exe is executable and raise exception if it is not.
 
-    Tries to execute exe by running it with an empty string input
-    and checks that no error is thrown.
-
-    We need to verify the executable manually because subprocess.run() throws
-    confusing errors when it tries to execute an invalid executable.
+    Execute exe with an empty string input and verify that it returns zero.  We
+    can't just check the executable bit because scripts with incorrect shebangs
+    result in difficult-to-under error messages.
 
     """
-    exe = pathlib.Path(exe)
     try:
         subprocess.run(
             str(exe),
@@ -144,9 +141,7 @@ def is_executable(exe):
             check=True,
         )
     except subprocess.CalledProcessError as err:
-        raise MadoopError(
-            f"{exe} is not an executable script. "
-        ) from err
+        raise MadoopError(f"Failed is executable test: {exe} {err}") from err
 
 
 def part_filename(num):
