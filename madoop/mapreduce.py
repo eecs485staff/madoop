@@ -4,11 +4,11 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 """
 import collections
-import shutil
-import pathlib
-import subprocess
-import math
 import contextlib
+import math
+import pathlib
+import shutil
+import subprocess
 import tempfile
 from .exceptions import MadoopError
 
