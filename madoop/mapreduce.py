@@ -93,10 +93,10 @@ def prepare_input_files(input_dir, output_dir):
     to output_dir.  For larger files, split into blocks of MAX_INPUT_SPLIT_SIZE
     bytes and write block to output_dir. Input files will never be combined.
 
-    Return the number of files created. This will be the number of mappers
-    since we will assume that the number of tasks per mapper is 1.  Apache
-    Hadoop has a configurable number of tasks per mapper, however for both
-    simplicity and because our use case has smaller inputs we use 1.
+    The number of files created will be the number of mappers since we will
+    assume that the number of tasks per mapper is 1.  Apache Hadoop has a
+    configurable number of tasks per mapper, however for both simplicity and
+    because our use case has smaller inputs we use 1.
 
     """
     assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
@@ -127,8 +127,6 @@ def prepare_input_files(input_dir, output_dir):
                     for file2 in out_filenames]
                 for i, line in enumerate(file):
                     out_files[i % num_split].write(line)
-
-    return part_num
 
 
 def check_shebang(exe):
@@ -211,8 +209,6 @@ def group_stage(input_dir, output_dir):
 
     Process each mapper output file, allocating lines to grouper output files
     using the hash and modulo of the key.
-
-    Return the number of reducers to be used in the reduce stage.
 
     """
     # Compute output filenames
