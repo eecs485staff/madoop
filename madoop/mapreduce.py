@@ -256,7 +256,6 @@ def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
     input_files = [i for i in input_dir.iterdir() if i.name != "sorted.out"]
     for i, input_path in enumerate(sorted(input_files)):
-        input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
         with open(input_path, encoding="utf-8") as infile, \
