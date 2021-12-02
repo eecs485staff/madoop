@@ -1,4 +1,5 @@
 """System tests for the map stage of Michigan Hadoop."""
+from pathlib import Path
 from madoop.mapreduce import map_stage, group_stage, reduce_stage
 from . import utils
 from .utils import TESTDATA_DIR
@@ -19,6 +20,7 @@ def test_map_stage(tmpdir):
 
 def test_group_stage(tmpdir):
     """Test group stage using word count example."""
+    tmpdir = Path(tmpdir)
     group_stage(
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=tmpdir,
