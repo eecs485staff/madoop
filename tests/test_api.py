@@ -20,10 +20,12 @@ def test_simple(tmpdir):
 
 
 def test_non_zero_return_code(tmpdir):
-    """ 
-        Run a MapReduce job on a mapper executable
-        that returns a non-zero return code and verify
-        the appropriate error message.
+    """Run a MapReduce job that fails and verify the error.
+
+    Run a MapReduce job on a mapper executable
+    that returns a non-zero return code and verify
+    the appropriate error message.
+
     """
     with tmpdir.as_cwd():
         try:
@@ -38,10 +40,12 @@ def test_non_zero_return_code(tmpdir):
 
 
 def test_missing_shebang(tmpdir):
-    """
-        Run a MapReduce job on a reducer executable
-        that is missing a shebang and verify
-        the appropriate error message.
+    """Run a MapReduce job that fails and verify the error.
+
+    Run a MapReduce job on a reducer executable
+    that is missing a shebang and verify
+    the appropriate error message.
+
     """
     with tmpdir.as_cwd():
         try:
