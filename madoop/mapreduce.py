@@ -164,6 +164,7 @@ def part_filename(num):
 
 def map_stage(exe, input_dir, output_dir, num_map):
     """Execute mappers."""
+    assert len(list(input_dir.iterdir()))== num_map
     for i in range(num_map):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
@@ -260,6 +261,8 @@ def group_stage(input_dir, output_dir):
 
 def reduce_stage(exe, input_dir, output_dir, num_reduce):
     """Execute reducers."""
+    input_files = [i for i in input_dir.iterdir() if i.name != "sorted.out"]
+    assert len(input_files)  == num_reduce
     for i in range(num_reduce):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
