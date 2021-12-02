@@ -10,7 +10,6 @@ def test_map_stage(tmpdir):
         exe=TESTDATA_DIR/"word_count/map.py",
         input_dir=TESTDATA_DIR/"word_count/correct/input",
         output_dir=tmpdir,
-        num_map=2,
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/mapper-output",

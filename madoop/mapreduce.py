@@ -49,7 +49,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
 
         # Copy and rename input files: part-00000, part-00001, etc.
         input_dir = pathlib.Path(input_dir)
-        num_map = prepare_input_files(input_dir, map_input_dir)
+        prepare_input_files(input_dir, map_input_dir)
 
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
@@ -61,7 +61,6 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             exe=map_exe,
             input_dir=map_input_dir,
             output_dir=map_output_dir,
-            num_map=num_map,
         )
 
         # Run the grouping stage
@@ -162,11 +161,9 @@ def part_filename(num):
     return f"part-{num:05d}"
 
 
-def map_stage(exe, input_dir, output_dir, num_map):
+def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
-    assert len(list(input_dir.iterdir()))== num_map
-    for i in range(num_map):
-        input_path = input_dir/part_filename(i)
+    for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
         with input_path.open() as infile, output_path.open('w') as outfile:
@@ -262,7 +259,7 @@ def group_stage(input_dir, output_dir):
 def reduce_stage(exe, input_dir, output_dir, num_reduce):
     """Execute reducers."""
     input_files = [i for i in input_dir.iterdir() if i.name != "sorted.out"]
-    assert len(input_files)  == num_reduce
+    assert len(input_files) == num_reduce
     for i in range(num_reduce):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
