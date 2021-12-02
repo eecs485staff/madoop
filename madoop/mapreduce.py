@@ -128,7 +128,7 @@ def is_executable(exe):
 
     Execute exe with an empty string input and verify that it returns zero.  We
     can't just check the executable bit because scripts with incorrect shebangs
-    result in difficult-to-under error messages.
+    result in difficult-to-understand error messages.
 
     """
     try:
