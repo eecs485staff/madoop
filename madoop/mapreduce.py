@@ -233,7 +233,7 @@ def group_stage(input_dir, output_dir):
     # Remove empty output files.  We won't always use the maximum number of
     # reducers because some MapReduce programs have fewer intermediate keys.
     for path in output_dir.iterdir():
-        if path.stat().st_size == 0 :
+        if path.stat().st_size == 0:
             path.unlink()
 
 
