@@ -65,7 +65,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
 
         # Run the grouping stage
         print("Starting group stage")
-        num_reduce = group_stage(
+        group_stage(
             input_dir=map_output_dir,
             output_dir=group_output_dir,
         )
@@ -76,7 +76,6 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             exe=reduce_exe,
             input_dir=group_output_dir,
             output_dir=reduce_output_dir,
-            num_reduce=num_reduce,
         )
 
         # Move files from temporary output dir to user-specified output dir
@@ -252,15 +251,11 @@ def group_stage(input_dir, output_dir):
             # Write to grouper output file
             grouper_files[0].write(line)
 
-    # Number of grouper output files = number of reducers
-    return len(grouper_files)
 
-
-def reduce_stage(exe, input_dir, output_dir, num_reduce):
+def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
     input_files = [i for i in input_dir.iterdir() if i.name != "sorted.out"]
-    assert len(input_files) == num_reduce
-    for i in range(num_reduce):
+    for i, input_path in enumerate(sorted(input_files)):
         input_path = input_dir/part_filename(i)
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")

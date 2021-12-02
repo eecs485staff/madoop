@@ -35,7 +35,6 @@ def test_reduce_stage(tmpdir):
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",
         output_dir=tmpdir,
-        num_reduce=4,
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/reducer-output",
