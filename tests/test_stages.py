@@ -8,7 +8,7 @@ def test_map_stage(tmpdir):
     """Test the map stage using word count example."""
     map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
-        input_dir=TESTDATA_DIR/"word_count/correct/mapper-input",
+        input_dir=TESTDATA_DIR/"word_count/correct/input",
         output_dir=tmpdir,
         num_map=2,
     )
