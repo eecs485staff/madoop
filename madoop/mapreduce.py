@@ -134,18 +134,6 @@ def prepare_input_files(input_dir, output_dir):
     return part_num
 
 
-def check_num_keys(filename):
-    """Check num keys."""
-    key_instances = 0
-    with open(filename, encoding="utf-8") as file:
-        for _ in file:
-            key_instances += 1
-
-    # implies we are dumping everything into one key
-    if key_instances == 1:
-        raise MadoopError('Single key detected')
-
-
 def check_shebang(exe):
     """Verify correct exe starts with '#!/usr/bin/env python3'.
 
