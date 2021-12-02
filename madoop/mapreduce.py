@@ -101,32 +101,26 @@ def prepare_input_files(input_dir, output_dir):
     """
     assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
 
-    # Count input files
-    filenames = []
-    for filename in input_dir.glob('*'):
-        if not filename.is_dir():
-            filenames.append(filename)
+    # Input filenames
+    inpaths = list(input_dir.glob('*'))
+    assert all(i.is_file() for i in inpaths)
 
-    # Copy and rename input files
+    # Split and copy input files
     part_num = 0
-    for filename in filenames:
-        # Calculate the number of splits
-        in_file = pathlib.Path(filename)
-        num_split = math.ceil(in_file.stat().st_size / MAX_INPUT_SPLIT_SIZE)
+    for inpath in inpaths:
+        # Compute output filenames
+        num_splits = math.ceil(inpath.stat().st_size / MAX_INPUT_SPLIT_SIZE)
+        outpaths = [
+            output_dir/part_filename(part_num + i) for i in range(num_splits)
+        ]
+        part_num += num_splits
 
-        # create num_split output files
-        out_filenames = [
-            output_dir/part_filename(part_num + i) for i in range(num_split)]
-        part_num += num_split
-
-        # copy to new files
-        with in_file.open(encoding="utf-8") as file:
-            with contextlib.ExitStack() as stack:
-                out_files = [
-                    stack.enter_context(file2.open('w'))
-                    for file2 in out_filenames]
-                for i, line in enumerate(file):
-                    out_files[i % num_split].write(line)
+        # Copy to new output files
+        with contextlib.ExitStack() as stack:
+            outfiles = [stack.enter_context(i.open('w')) for i in outpaths]
+            infile = stack.enter_context(inpath.open(encoding="utf-8"))
+            for i, line in enumerate(infile):
+                outfiles[i % num_splits].write(line)
 
 
 def check_shebang(exe):
@@ -236,8 +230,7 @@ def reduce_stage(exe, input_dir, output_dir):
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
-        with open(input_path, encoding="utf-8") as infile, \
-             open(output_path, 'w', encoding="utf-8") as outfile:
+        with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
                     str(exe),
