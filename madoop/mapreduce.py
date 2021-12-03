@@ -163,7 +163,7 @@ def map_stage(exe, input_dir, output_dir):
         output_path = output_dir/part_filename(i)
         LOGGER.debug(
             "%s < %s > %s",
-            exe.name, input_path.name, output_path.name
+            exe.name, last_two(input_path), last_two(output_path),
         )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
@@ -183,6 +183,7 @@ def map_stage(exe, input_dir, output_dir):
 
 def sort_file(path):
     """Sort contents of path, overwriting it."""
+    LOGGER.debug("sort %s", last_two(path))
     with path.open() as infile:
         sorted_lines = sorted(infile)
     with path.open("w") as outfile:
@@ -198,6 +199,13 @@ def keyhash(key):
 def partition_keys(inpath, outpaths):
     """Allocate lines of inpath among outpaths using hash of key."""
     assert len(outpaths) == MAX_NUM_REDUCE
+    outparent = outpaths[0].parent
+    assert all(i.parent == outparent for i in outpaths)
+    outnames = [i.name for i in outpaths]
+    LOGGER.debug(
+        "partition %s -> %s/{%s}",
+        last_two(inpath), outparent.name, ",".join(outnames),
+    )
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         for line in stack.enter_context(inpath.open()):
@@ -220,15 +228,10 @@ def group_stage(input_dir, output_dir):
 
     # Parition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        LOGGER.debug(
-            "partition %s -> %s",
-            inpath.name, [i.name for i in outpaths],
-        )
         partition_keys(inpath, outpaths)
 
     # Sort output files
     for path in sorted(output_dir.iterdir()):
-        LOGGER.debug("sort %s", path.name)
         sort_file(path)
 
     # Remove empty output files.  We won't always use the maximum number of
@@ -244,7 +247,7 @@ def reduce_stage(exe, input_dir, output_dir):
         output_path = output_dir/part_filename(i)
         LOGGER.debug(
             "%s < %s > %s",
-            exe.name, input_path.name, output_path.name
+            exe.name, last_two(input_path), last_two(output_path),
         )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
@@ -260,3 +263,7 @@ def reduce_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+
+
+def last_two(path):
+    return pathlib.Path(*path.parts[-2:])
