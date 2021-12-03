@@ -30,7 +30,7 @@ def test_bash_executable(tmpdir):
             reduce_exe=TESTDATA_DIR/"word_count/reduce.sh",
         )
     utils.assert_dirs_eq(
-        TESTDATA_DIR/"word_count/correct/output_bash",
+        TESTDATA_DIR/"word_count/correct/output",
         tmpdir/"output",
     )
 

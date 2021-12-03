@@ -11,4 +11,4 @@
 set -Eeuo pipefail
 
 # Reduce
-cat | cut -f1 | uniq -c | awk '{print $2"\t"$1}'
+cat | cut -f1 | uniq -c | awk '{print $2" "$1}'
