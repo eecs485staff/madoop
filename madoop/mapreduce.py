@@ -112,9 +112,12 @@ def prepare_input_files(input_dir, output_dir):
 
     # Split and copy input files
     part_num = 0
-    for inpath in inpaths:
+    for inpath in sorted(inpaths):
         # Compute output filenames
-        num_splits = math.ceil(inpath.stat().st_size / MAX_INPUT_SPLIT_SIZE)
+        st_size = inpath.stat().st_size
+        num_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
+        assert num_splits > 0
+        LOGGER.debug("input %s size=%sB numsplits=%s", inpath, st_size, num_splits)
         outpaths = [
             output_dir/part_filename(part_num + i) for i in range(num_splits)
         ]
