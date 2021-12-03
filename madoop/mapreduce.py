@@ -141,7 +141,7 @@ def is_executable(exe):
             check=True,
         )
     except subprocess.CalledProcessError as err:
-        raise MadoopError(f"Failed is executable test: {exe} {err}") from err
+        raise MadoopError(f"Failed executable test: {err}") from err
 
 
 def part_filename(num):
