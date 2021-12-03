@@ -3,7 +3,7 @@
 # Word count reducer.
 #
 # Input: <word><tab><count>
-# Output: <word><tab><total>
+# Output: <word><space><total>
 #
 # NOTE: this code assumes that the value is "1" for every key.
 
