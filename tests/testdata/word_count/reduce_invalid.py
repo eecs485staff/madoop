@@ -1,4 +1,4 @@
-"""Reduce example."""
+"""Invalid reduce executable Reduce example is missing a shebang."""
 
 import sys
 import collections

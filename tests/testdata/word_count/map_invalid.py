@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Map example."""
+"""Invalid map executable returns non-zero."""
 
 import sys
 
