@@ -26,8 +26,8 @@ def test_bash_executable(tmpdir):
         madoop.mapreduce(
             input_dir=TESTDATA_DIR/"word_count/input",
             output_dir="output",
-            map_exe=TESTDATA_DIR/"word_count/wc_map.sh",
-            reduce_exe=TESTDATA_DIR/"word_count/wc_reduce.sh",
+            map_exe=TESTDATA_DIR/"word_count/map.sh",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.sh",
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output_bash",
