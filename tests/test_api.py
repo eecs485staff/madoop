@@ -1,4 +1,5 @@
 """System tests for the API interface."""
+import pytest
 import madoop
 from . import utils
 from .utils import TESTDATA_DIR
@@ -19,48 +20,8 @@ def test_simple(tmpdir):
     )
 
 
-def test_non_zero_return_code(tmpdir):
-    """Run a MapReduce job that fails and verify the error.
-
-    Run a MapReduce job on a mapper executable
-    that returns a non-zero return code and verify
-    the appropriate error message.
-
-    """
-    with tmpdir.as_cwd():
-        try:
-            madoop.mapreduce(
-                input_dir=TESTDATA_DIR/"word_count/input",
-                output_dir="output",
-                map_exe=TESTDATA_DIR/"word_count/map_invalid.py",
-                reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
-            )
-        except madoop.MadoopError as err:
-            assert "Failed is executable test" in str(err)
-
-
-def test_missing_shebang(tmpdir):
-    """Run a MapReduce job that fails and verify the error.
-
-    Run a MapReduce job on a reducer executable
-    that is missing a shebang and verify
-    the appropriate error message.
-
-    """
-    with tmpdir.as_cwd():
-        try:
-            madoop.mapreduce(
-                input_dir=TESTDATA_DIR/"word_count/input",
-                output_dir="output",
-                map_exe=TESTDATA_DIR/"word_count/map.py",
-                reduce_exe=TESTDATA_DIR/"word_count/reduce_invalid.py",
-            )
-        except madoop.MadoopError as err:
-            assert "Failed is executable test" in str(err)
-
-
 def test_bash_executable(tmpdir):
-    """Run a MapReduce job on bash executables and verify the output."""
+    """Run a MapReduce job written in Bash."""
     with tmpdir.as_cwd():
         madoop.mapreduce(
             input_dir=TESTDATA_DIR/"word_count/input",
@@ -72,3 +33,25 @@ def test_bash_executable(tmpdir):
         TESTDATA_DIR/"word_count/correct/output_bash",
         tmpdir/"output",
     )
+
+
+def test_bad_map_exe(tmpdir):
+    """Map exe returns non-zero should produce an error message."""
+    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
+        madoop.mapreduce(
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map_invalid.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+        )
+
+
+def test_missing_shebang(tmpdir):
+    """Reduce exe with a bad shebag should produce an error message."""
+    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
+        madoop.mapreduce(
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce_invalid.py",
+        )
