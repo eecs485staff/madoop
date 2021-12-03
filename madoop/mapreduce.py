@@ -117,7 +117,7 @@ def prepare_input_files(input_dir, output_dir):
         st_size = inpath.stat().st_size
         num_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
         assert num_splits > 0
-        LOGGER.debug("input %s size=%sB numsplits=%s", inpath, st_size, num_splits)
+        LOGGER.debug("input %s size=%sB splits=%s", inpath, st_size, num_splits)
         outpaths = [
             output_dir/part_filename(part_num + i) for i in range(num_splits)
         ]
