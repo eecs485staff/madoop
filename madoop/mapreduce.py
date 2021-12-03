@@ -45,8 +45,8 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         # Create stage input and output directory
         map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
-        group_output_dir = tmpdir/'grouper-output'
-        reduce_output_dir = tmpdir/'reducer-output'
+        group_output_dir = tmpdir/'reducer-input'
+        reduce_output_dir = tmpdir/'output'
         map_input_dir.mkdir()
         map_output_dir.mkdir()
         group_output_dir.mkdir()
