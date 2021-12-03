@@ -22,7 +22,7 @@ MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 MAX_NUM_REDUCE = 4
 
 # Madoop logger
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("madoop")
 
 
 def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
@@ -230,15 +230,16 @@ def group_stage(input_dir, output_dir):
     for inpath in sorted(input_dir.iterdir()):
         partition_keys(inpath, outpaths)
 
-    # Sort output files
-    for path in sorted(output_dir.iterdir()):
-        sort_file(path)
-
     # Remove empty output files.  We won't always use the maximum number of
     # reducers because some MapReduce programs have fewer intermediate keys.
     for path in output_dir.iterdir():
         if path.stat().st_size == 0:
+            LOGGER.debug("empty partition: rm %s", last_two(path))
             path.unlink()
+
+    # Sort output files
+    for path in sorted(output_dir.iterdir()):
+        sort_file(path)
 
 
 def reduce_stage(exe, input_dir, output_dir):
