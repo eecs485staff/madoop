@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reduce example."""
+"""Word count reducer."""
 
 import sys
 import collections
