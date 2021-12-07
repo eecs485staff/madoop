@@ -172,6 +172,7 @@ def part_filename(num):
 
 def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
+    i = 0
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
         LOGGER.debug(
@@ -192,6 +193,7 @@ def map_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished map executions: %s", i)
 
 
 def sort_file(path):
@@ -219,12 +221,15 @@ def partition_keys(inpath, outpaths):
         "partition %s -> %s/{%s}",
         last_two(inpath), outparent.name, ",".join(outnames),
     )
+    keys = set()
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         for line in stack.enter_context(inpath.open()):
             key = line.partition('\t')[0]
+            keys.add(key)
             reducer_idx = keyhash(key) % MAX_NUM_REDUCE
             outfiles[reducer_idx].write(line)
+    LOGGER.debug("unique keys in %s: %s", last_two(inpath), len(keys))
 
 
 def group_stage(input_dir, output_dir):
@@ -257,6 +262,7 @@ def group_stage(input_dir, output_dir):
 
 def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
+    i = 0
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
         LOGGER.debug(
@@ -277,6 +283,7 @@ def reduce_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished reduce executions: %s", i+1)
 
 
 def last_two(path):
