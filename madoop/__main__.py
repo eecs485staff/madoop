@@ -23,6 +23,7 @@ def main():
         '--version', action='version',
         version=f'Madoop {version}'
     )
+    optional_args.add_argument('-v', '--verbose', action='count', default=0)
 
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-input', dest='input', required=True)
@@ -32,14 +33,18 @@ def main():
 
     args, _ = parser.parse_known_args()
 
-    # Configure logging
+    # Handle verbose flag with logging configuration
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(name)s:%(levelname)s: %(message)s')
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
     handler.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
-    root_logger.setLevel(logging.DEBUG)
+    if args.verbose > 0:
+        root_logger.setLevel(logging.DEBUG)
+    else:
+        root_logger.setLevel(logging.INFO)
 
+    # Run MapReduce API
     try:
         mapreduce(
             input_dir=args.input,
@@ -49,9 +54,6 @@ def main():
         )
     except MadoopError as err:
         sys.exit(f"Error: {err}")
-
-    # Remind user where to find output
-    print(f"Output directory: {args.output}")
 
 
 if __name__ == '__main__':
