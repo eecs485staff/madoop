@@ -17,11 +17,11 @@ $ madoop \
   -mapper example/map.py \
   -reducer example/reduce.py
 $ cat output/part-*
-autograder	2
-world	1
-eecs485	1
-goodbye	1
-hello	3
+autograder 2
+world 1
+eecs485 1
+goodbye 1
+hello 3
 ```
 
 
@@ -67,11 +67,11 @@ Concatenate and print output.  The concatenation of multiple output files may no
 $ ls output
 part-00000  part-00001  part-00002  part-00003
 $ cat output/part-*
-autograder	2
-world	1
-eecs485	1
-goodbye	1
-hello	3
+autograder 2
+world 1
+eecs485 1
+goodbye 1
+hello 3
 ```
 
 ## Comparison with Apache Hadoop and CLI
