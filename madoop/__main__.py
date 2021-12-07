@@ -34,14 +34,10 @@ def main():
 
     # Configure logging
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        '%(asctime)s %(name)s %(levelname)s %(message)s'
-    )
+    formatter = logging.Formatter('%(name)s:%(levelname)s: %(message)s')
     handler.setFormatter(formatter)
-    madoop_logger = logging.getLogger("madoop")
-    madoop_logger.addHandler(handler)
     root_logger = logging.getLogger()
+    root_logger.addHandler(handler)
     root_logger.setLevel(logging.DEBUG)
 
     try:
