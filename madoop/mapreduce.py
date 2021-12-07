@@ -127,6 +127,13 @@ def prepare_input_files(input_dir, output_dir):
         with contextlib.ExitStack() as stack:
             outfiles = [stack.enter_context(i.open('w')) for i in outpaths]
             infile = stack.enter_context(inpath.open(encoding="utf-8"))
+            outparent = outpaths[0].parent
+            assert all(i.parent == outparent for i in outpaths)
+            outnames = [i.name for i in outpaths]
+            logging.debug(
+                "split %s -> %s/{%s}",
+                last_two(inpath), outparent.name, ",".join(outnames),
+            )
             for i, line in enumerate(infile):
                 outfiles[i % num_splits].write(line)
 
