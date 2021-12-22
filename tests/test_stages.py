@@ -7,6 +7,7 @@ from .utils import TESTDATA_DIR
 
 def test_map_stage(tmpdir):
     """Test the map stage using word count example."""
+    tmpdir = Path(tmpdir)
     map_stage(
         exe=TESTDATA_DIR/"word_count/map.py",
         input_dir=TESTDATA_DIR/"word_count/correct/input",
@@ -33,6 +34,7 @@ def test_group_stage(tmpdir):
 
 def test_reduce_stage(tmpdir):
     """Test reduce stage using word count example."""
+    tmpdir = Path(tmpdir)
     reduce_stage(
         exe=TESTDATA_DIR/"word_count/reduce.py",
         input_dir=TESTDATA_DIR/"word_count/correct/grouper-output",

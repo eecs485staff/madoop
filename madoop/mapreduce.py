@@ -217,15 +217,15 @@ def group_stage(input_dir, output_dir):
     for inpath in input_dir.iterdir():
         partition_keys(inpath, outpaths)
 
-    # Sort output files
-    for path in output_dir.iterdir():
-        sort_file(path)
-
     # Remove empty output files.  We won't always use the maximum number of
     # reducers because some MapReduce programs have fewer intermediate keys.
     for path in output_dir.iterdir():
         if path.stat().st_size == 0:
             path.unlink()
+
+    # Sort output files
+    for path in output_dir.iterdir():
+        sort_file(path)
 
 
 def reduce_stage(exe, input_dir, output_dir):
