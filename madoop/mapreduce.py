@@ -115,13 +115,13 @@ def prepare_input_files(input_dir, output_dir):
     for inpath in sorted(inpaths):
         # Compute output filenames
         st_size = inpath.stat().st_size
-        num_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
-        assert num_splits > 0
-        LOGGER.debug("input %s size=%sB splits=%s", inpath, st_size, num_splits)
+        n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
+        assert n_splits > 0
+        LOGGER.debug("input %s size=%sB splits=%s", inpath, st_size, n_splits)
         outpaths = [
-            output_dir/part_filename(part_num + i) for i in range(num_splits)
+            output_dir/part_filename(part_num + i) for i in range(n_splits)
         ]
-        part_num += num_splits
+        part_num += n_splits
 
         # Copy to new output files
         with contextlib.ExitStack() as stack:
@@ -135,7 +135,7 @@ def prepare_input_files(input_dir, output_dir):
                 last_two(inpath), outparent.name, ",".join(outnames),
             )
             for i, line in enumerate(infile):
-                outfiles[i % num_splits].write(line)
+                outfiles[i % n_splits].write(line)
 
 
 def is_executable(exe):
@@ -287,4 +287,5 @@ def reduce_stage(exe, input_dir, output_dir):
 
 
 def last_two(path):
+    """Return the last two parts of path."""
     return pathlib.Path(*path.parts[-2:])
