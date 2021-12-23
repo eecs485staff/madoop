@@ -20,10 +20,9 @@ def test_map_stage(tmpdir):
 
 def test_group_stage(tmpdir):
     """Test group stage using word count example."""
-    tmpdir = Path(tmpdir)
     group_stage(
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
-        output_dir=tmpdir,
+        output_dir=Path(tmpdir),
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/grouper-output",
