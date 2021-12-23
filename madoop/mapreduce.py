@@ -3,8 +3,8 @@
 Andrew DeOrio <awdeorio@umich.edu>
 
 """
-import collections
 import contextlib
+import hashlib
 import math
 import pathlib
 import shutil
@@ -176,79 +176,61 @@ def map_stage(exe, input_dir, output_dir):
                 ) from err
 
 
-def group_stage_cat_sort(input_dir, sorted_output_filename):
-    """Concatenate and sort input files, saving to 'sorted_ouput_filename'.
+def sort_file(path):
+    """Sort contents of path, overwriting it."""
+    with path.open() as infile:
+        sorted_lines = sorted(infile)
+    with path.open("w") as outfile:
+        outfile.writelines(sorted_lines)
 
-    Set the locale with the LC_ALL environment variable to force an ASCII
-    sort order.
-    """
-    input_filenames = input_dir.glob("*")
-    with sorted_output_filename.open('w') as outfile:
-        with subprocess.Popen(
-            ["cat", *input_filenames],
-            stdout=subprocess.PIPE,
-            env={'LC_ALL': 'C.UTF-8'},
-        ) as cat_proc, \
-            subprocess.Popen(
-                ["sort"],
-                stdin=cat_proc.stdout,
-                stdout=outfile,
-                env={'LC_ALL': 'C.UTF-8'},
-        ) as sort_proc:
-            cat_proc.wait()
-            sort_proc.wait()
-    assert cat_proc.returncode == 0
-    assert sort_proc.returncode == 0
+
+def keyhash(key):
+    """Hash key and return an integer."""
+    hexdigest = hashlib.md5(key.encode("utf-8")).hexdigest()
+    return int(hexdigest, base=16)
+
+
+def partition_keys(inpath, outpaths):
+    """Allocate lines of inpath among outpaths using hash of key."""
+    assert len(outpaths) == MAX_NUM_REDUCE
+    with contextlib.ExitStack() as stack:
+        outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
+        for line in stack.enter_context(inpath.open()):
+            key = line.partition('\t')[0]
+            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            outfiles[reducer_idx].write(line)
 
 
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
-    Concatenate and sort input files to 'sorted.out'. Determine the number of
-    reducers and split 'sorted.out' into that many files.
+    Process each mapper output file, allocating lines to grouper output files
+    using the hash and modulo of the key.
 
     """
-    sorted_output_filename = output_dir/'sorted.out'
-    print(f"+ cat {input_dir}/* | sort > {sorted_output_filename}")
+    # Compute output filenames
+    outpaths = []
+    for i in range(MAX_NUM_REDUCE):
+        outpaths.append(output_dir/part_filename(i))
 
-    # Concatenate and sort
-    group_stage_cat_sort(input_dir, sorted_output_filename)
+    # Parition input, appending to output files
+    for inpath in input_dir.iterdir():
+        partition_keys(inpath, outpaths)
 
-    # Write lines to grouper output files.  Round robin allocation by key.
-    with contextlib.ExitStack() as stack:
-        grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
-        sorted_output_file = stack.enter_context(sorted_output_filename.open())
-        prev_key = None
-        for lineno, line in enumerate(sorted_output_file):
-            # Parse the line.  Must be two strings separated by a tab.
-            assert '\t' in line, \
-                f"Missing TAB {sorted_output_filename}:{lineno}"
-            key, _ = line.split('\t', maxsplit=1)
+    # Remove empty output files.  We won't always use the maximum number of
+    # reducers because some MapReduce programs have fewer intermediate keys.
+    for path in output_dir.iterdir():
+        if path.stat().st_size == 0:
+            path.unlink()
 
-            # If it's a new key, ...
-            if key != prev_key:
-                # Update prev_key
-                prev_key = key
-
-                # If using less than the maximum number of reducers, create and
-                # open a new grouper output file.
-                num_grouper_files = len(grouper_files)
-                if num_grouper_files < MAX_NUM_REDUCE:
-                    filename = output_dir/part_filename(num_grouper_files)
-                    file = filename.open('w')
-                    grouper_files.append(stack.enter_context(file))
-
-                # Rotate circular queue of grouper files
-                grouper_files.rotate(1)
-
-            # Write to grouper output file
-            grouper_files[0].write(line)
+    # Sort output files
+    for path in output_dir.iterdir():
+        sort_file(path)
 
 
 def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
-    input_files = [i for i in input_dir.iterdir() if i.name != "sorted.out"]
-    for i, input_path in enumerate(sorted(input_files)):
+    for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
         print(f"+ {exe.name} < {input_path} > {output_path}")
         with input_path.open() as infile, output_path.open('w') as outfile:
