@@ -45,11 +45,11 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         # Create stage input and output directory
         map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
-        group_output_dir = tmpdir/'reducer-input'
+        reduce_input_dir = tmpdir/'reducer-input'
         reduce_output_dir = tmpdir/'output'
         map_input_dir.mkdir()
         map_output_dir.mkdir()
-        group_output_dir.mkdir()
+        reduce_input_dir.mkdir()
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
@@ -72,14 +72,14 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         LOGGER.info("Starting group stage")
         group_stage(
             input_dir=map_output_dir,
-            output_dir=group_output_dir,
+            output_dir=reduce_input_dir,
         )
 
         # Run the reducing stage
         LOGGER.info("Starting reduce stage")
         reduce_stage(
             exe=reduce_exe,
-            input_dir=group_output_dir,
+            input_dir=reduce_input_dir,
             output_dir=reduce_output_dir,
         )
 
