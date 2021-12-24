@@ -26,7 +26,7 @@ hello 3
 
 
 ## Example
-We'll walk through the example in the Quick Start again, providing more detail.  For an in-depth explanation of the map and reduce code, see the [Hadoop Streaming tutorial](https://eecs485staff.github.io/p5-search-engine/hadoop_streaming.html).
+We'll walk through the example in the Quick Start again, providing more detail.  For an in-depth explanation of the map and reduce code, see the [Hadoop Streaming tutorial](docs/hadoop_streaming.md).
 
 ## Install
 Install Madoop.  Your version might be different.
