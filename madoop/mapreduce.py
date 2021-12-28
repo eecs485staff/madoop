@@ -88,6 +88,9 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             shutil.copy(filename, output_dir)
 
     # Remind user where to find output
+    for outpath in sorted(output_dir.iterdir()):
+        st_size = outpath.stat().st_size
+        LOGGER.debug("%s size=%sB", outpath, st_size)
     LOGGER.info("Output directory: %s", output_dir)
 
 
