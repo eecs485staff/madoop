@@ -117,7 +117,9 @@ def prepare_input_files(input_dir, output_dir):
         st_size = inpath.stat().st_size
         n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
         assert n_splits > 0
-        LOGGER.debug("input %s size=%sB splits=%s", inpath, st_size, n_splits)
+        LOGGER.debug(
+            "input %s size=%sB partitions=%s", inpath, st_size, n_splits
+        )
         outpaths = [
             output_dir/part_filename(part_num + i) for i in range(n_splits)
         ]
@@ -131,7 +133,7 @@ def prepare_input_files(input_dir, output_dir):
             assert all(i.parent == outparent for i in outpaths)
             outnames = [i.name for i in outpaths]
             logging.debug(
-                "split %s -> %s/{%s}",
+                "partition %s -> %s/{%s}",
                 last_two(inpath), outparent.name, ",".join(outnames),
             )
             for i, line in enumerate(infile):
