@@ -88,9 +88,12 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             shutil.copy(filename, output_dir)
 
     # Remind user where to find output
+    total_size = 0
     for outpath in sorted(output_dir.iterdir()):
         st_size = outpath.stat().st_size
+        total_size += st_size
         LOGGER.debug("%s size=%sB", outpath, st_size)
+    LOGGER.debug("total output size=%sB", total_size)
     LOGGER.info("Output directory: %s", output_dir)
 
 
@@ -115,9 +118,11 @@ def prepare_input_files(input_dir, output_dir):
 
     # Split and copy input files
     part_num = 0
+    total_size = 0
     for inpath in sorted(inpaths):
         # Compute output filenames
         st_size = inpath.stat().st_size
+        total_size += st_size
         n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
         assert n_splits > 0
         LOGGER.debug(
@@ -141,6 +146,7 @@ def prepare_input_files(input_dir, output_dir):
             )
             for i, line in enumerate(infile):
                 outfiles[i % n_splits].write(line)
+    LOGGER.debug("total input size=%sB", total_size)
 
 
 def is_executable(exe):
