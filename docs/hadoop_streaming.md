@@ -9,10 +9,10 @@ Hadoop Streaming in Python
 
 This tutorial shows how to write MapReduce programs in Python that are compatible with Hadoop Streaming.  We'll use Python's `itertools.groupby()` function to simplify our code.
 
-We'll use files provided with the [starter code](https://eecs485staff.github.io/p5-search-engine/starter_files.tar.gz).
+We'll use files provided in the [example](/example/input).
 ```console
 $ pwd
-/Users/awdeorio/src/eecs485/p5-search-engine/hadoop/word_count
+/Users/awdeorio/src/eecs485/madoop/example
 $ tree
 .
 ├── input
