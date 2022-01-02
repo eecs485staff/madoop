@@ -5,6 +5,7 @@ include CONTRIBUTING.md
 include .pylintrc
 graft tests
 graft example
+graft docs
 
 # Avoid dev and and binary files
 exclude tox.ini
