@@ -139,7 +139,7 @@ def prepare_input_files(input_dir, output_dir):
             assert all(i.parent == outparent for i in outpaths)
             outnames = [i.name for i in outpaths]
             logging.debug(
-                "partition %s > %s/{%s}",
+                "partition %s >> %s/{%s}",
                 last_two(inpath), outparent.name, ",".join(outnames),
             )
             for i, line in enumerate(infile):
