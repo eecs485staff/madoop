@@ -202,7 +202,7 @@ def map_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
-    LOGGER.info("Finished map executions: %s", i)
+    LOGGER.info("Finished map executions: %s", i+1)
 
 
 def sort_file(path):
