@@ -17,11 +17,11 @@ $ madoop \
   -mapper example/map.py \
   -reducer example/reduce.py
 $ cat output/part-*
-autograder 2
-world 1
-eecs485 1
-goodbye 1
-hello 3
+Goodbye 1
+Bye 1
+Hadoop 2
+World 2
+Hello 2
 ```
 
 
@@ -40,11 +40,11 @@ Madoop 0.1.0
 We've provided two small input files.
 ```console
 $ cat example/input/input01.txt
-hello world
-hello eecs485
+Hello World
+Bye World
 $ cat example/input/input02.txt
-goodbye autograder
-hello autograder
+Hello Hadoop
+Goodbye Hadoop
 ```
 
 ### Run
@@ -65,13 +65,13 @@ $ madoop \
 Concatenate and print output.  The concatenation of multiple output files may not be sorted.
 ```console
 $ ls output
-part-00000  part-00001  part-00002  part-00003
+part-00000  part-00001  part-00002
 $ cat output/part-*
-autograder 2
-world 1
-eecs485 1
-goodbye 1
-hello 3
+Goodbye 1
+Bye 1
+Hadoop 2
+World 2
+Hello 2
 ```
 
 ## Comparison with Apache Hadoop and CLI
