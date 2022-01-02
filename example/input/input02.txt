@@ -1,2 +1,3 @@
-goodbye autograder
-hello autograder
+Hello Hadoop
+Goodbye Hadoop
+
