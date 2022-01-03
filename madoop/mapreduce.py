@@ -182,7 +182,7 @@ def part_filename(num):
 def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
     i = 0
-    for i, input_path in enumerate(sorted(input_dir.iterdir())):
+    for i, input_path in enumerate(sorted(input_dir.iterdir()), 1):
         output_path = output_dir/part_filename(i)
         LOGGER.debug(
             "%s < %s > %s",
@@ -202,7 +202,7 @@ def map_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
-    LOGGER.info("Finished map executions: %s", i+1)
+    LOGGER.info("Finished map executions: %s", i)
 
 
 def sort_file(path):
