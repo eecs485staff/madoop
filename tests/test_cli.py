@@ -48,6 +48,28 @@ def test_simple(tmpdir):
     )
 
 
+def test_verbose(tmpdir):
+    """Run a simple MapReduce job and verify the verbose stdout."""
+    with tmpdir.as_cwd():
+        completed_process = subprocess.run(
+            [
+                "madoop",
+                "--verbose",
+                "-input", TESTDATA_DIR/"word_count/input",
+                "-output", "output",
+                "-mapper", TESTDATA_DIR/"word_count/map.py",
+                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+            ],
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+            check=True,
+        )
+    stdout_lines = completed_process.stdout.strip().split("\n")
+    any(i.startswith("INFO") for i in stdout_lines)
+    any(i.startswith("DEBUG") for i in stdout_lines)
+    assert len(stdout_lines) > 20
+
+
 def test_hadoop_arguments(tmpdir):
     """Hadoop Streaming arguments should be ignored."""
     with tmpdir.as_cwd():

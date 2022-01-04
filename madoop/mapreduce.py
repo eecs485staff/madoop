@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import contextlib
 import hashlib
+import logging
 import math
 import pathlib
 import shutil
@@ -19,6 +20,9 @@ MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 # The number of reducers is dynamically determined by the number of unique keys
 # but will not be more than MAX_NUM_REDUCE
 MAX_NUM_REDUCE = 4
+
+# Madoop logger
+LOGGER = logging.getLogger("madoop")
 
 
 def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
@@ -36,15 +40,16 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
+        LOGGER.debug("tmpdir=%s", tmpdir)
 
         # Create stage input and output directory
         map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
-        group_output_dir = tmpdir/'grouper-output'
-        reduce_output_dir = tmpdir/'reducer-output'
+        reduce_input_dir = tmpdir/'reducer-input'
+        reduce_output_dir = tmpdir/'output'
         map_input_dir.mkdir()
         map_output_dir.mkdir()
-        group_output_dir.mkdir()
+        reduce_input_dir.mkdir()
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
@@ -56,7 +61,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         reduce_exe = pathlib.Path(reduce_exe).resolve()
 
         # Run the mapping stage
-        print("Starting map stage")
+        LOGGER.info("Starting map stage")
         map_stage(
             exe=map_exe,
             input_dir=map_input_dir,
@@ -64,17 +69,17 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         )
 
         # Run the grouping stage
-        print("Starting group stage")
+        LOGGER.info("Starting group stage")
         group_stage(
             input_dir=map_output_dir,
-            output_dir=group_output_dir,
+            output_dir=reduce_input_dir,
         )
 
         # Run the reducing stage
-        print("Starting reduce stage")
+        LOGGER.info("Starting reduce stage")
         reduce_stage(
             exe=reduce_exe,
-            input_dir=group_output_dir,
+            input_dir=reduce_input_dir,
             output_dir=reduce_output_dir,
         )
 
@@ -83,7 +88,13 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             shutil.copy(filename, output_dir)
 
     # Remind user where to find output
-    print(f"Output directory: {output_dir}")
+    total_size = 0
+    for outpath in sorted(output_dir.iterdir()):
+        st_size = outpath.stat().st_size
+        total_size += st_size
+        LOGGER.debug("%s size=%sB", outpath, st_size)
+    LOGGER.debug("total output size=%sB", total_size)
+    LOGGER.info("Output directory: %s", output_dir)
 
 
 def prepare_input_files(input_dir, output_dir):
@@ -101,26 +112,39 @@ def prepare_input_files(input_dir, output_dir):
     """
     assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
 
-    # Input filenames
-    inpaths = list(input_dir.glob('*'))
-    assert all(i.is_file() for i in inpaths)
-
     # Split and copy input files
     part_num = 0
-    for inpath in inpaths:
+    total_size = 0
+    for inpath in sorted(input_dir.glob('*')):
+        assert inpath.is_file()
+
         # Compute output filenames
-        num_splits = math.ceil(inpath.stat().st_size / MAX_INPUT_SPLIT_SIZE)
+        st_size = inpath.stat().st_size
+        total_size += st_size
+        n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
+        assert n_splits > 0
+        LOGGER.debug(
+            "input %s size=%sB partitions=%s", inpath, st_size, n_splits
+        )
         outpaths = [
-            output_dir/part_filename(part_num + i) for i in range(num_splits)
+            output_dir/part_filename(part_num + i) for i in range(n_splits)
         ]
-        part_num += num_splits
+        part_num += n_splits
 
         # Copy to new output files
         with contextlib.ExitStack() as stack:
             outfiles = [stack.enter_context(i.open('w')) for i in outpaths]
             infile = stack.enter_context(inpath.open(encoding="utf-8"))
+            outparent = outpaths[0].parent
+            assert all(i.parent == outparent for i in outpaths)
+            outnames = [i.name for i in outpaths]
+            logging.debug(
+                "partition %s >> %s/{%s}",
+                last_two(inpath), outparent.name, ",".join(outnames),
+            )
             for i, line in enumerate(infile):
-                outfiles[i % num_splits].write(line)
+                outfiles[i % n_splits].write(line)
+    LOGGER.debug("total input size=%sB", total_size)
 
 
 def is_executable(exe):
@@ -157,9 +181,13 @@ def part_filename(num):
 
 def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
-    for i, input_path in enumerate(sorted(input_dir.iterdir())):
+    i = 0
+    for i, input_path in enumerate(sorted(input_dir.iterdir()), 1):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, last_two(input_path), last_two(output_path),
+        )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
@@ -174,10 +202,12 @@ def map_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished map executions: %s", i)
 
 
 def sort_file(path):
     """Sort contents of path, overwriting it."""
+    LOGGER.debug("sort %s", last_two(path))
     with path.open() as infile:
         sorted_lines = sorted(infile)
     with path.open("w") as outfile:
@@ -193,12 +223,34 @@ def keyhash(key):
 def partition_keys(inpath, outpaths):
     """Allocate lines of inpath among outpaths using hash of key."""
     assert len(outpaths) == MAX_NUM_REDUCE
+    outparent = outpaths[0].parent
+    assert all(i.parent == outparent for i in outpaths)
+    outnames = [i.name for i in outpaths]
+    LOGGER.debug(
+        "partition %s >> %s/{%s}",
+        last_two(inpath), outparent.name, ",".join(outnames),
+    )
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         for line in stack.enter_context(inpath.open()):
             key = line.partition('\t')[0]
             reducer_idx = keyhash(key) % MAX_NUM_REDUCE
             outfiles[reducer_idx].write(line)
+
+
+def keyspace(path):
+    """Return the number of unique keys in {path}.
+
+    WARNING: This is a terribly slow implementation.  It would be faster to
+    record this information while grouping.x
+
+    """
+    keys = set()
+    with path.open() as infile:
+        for line in infile:
+            key = line.partition('\t')[0]
+            keys.add(key)
+    return keys
 
 
 def group_stage(input_dir, output_dir):
@@ -208,31 +260,52 @@ def group_stage(input_dir, output_dir):
     using the hash and modulo of the key.
 
     """
+    # Detailed keyspace debug output THIS IS SLOW
+    all_keys = set()
+    for inpath in sorted(input_dir.iterdir()):
+        keys = keyspace(inpath)
+        all_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_keys))
+
     # Compute output filenames
     outpaths = []
     for i in range(MAX_NUM_REDUCE):
         outpaths.append(output_dir/part_filename(i))
 
     # Parition input, appending to output files
-    for inpath in input_dir.iterdir():
+    for inpath in sorted(input_dir.iterdir()):
         partition_keys(inpath, outpaths)
 
     # Remove empty output files.  We won't always use the maximum number of
     # reducers because some MapReduce programs have fewer intermediate keys.
-    for path in output_dir.iterdir():
+    for path in sorted(output_dir.iterdir()):
         if path.stat().st_size == 0:
+            LOGGER.debug("empty partition: rm %s", last_two(path))
             path.unlink()
 
     # Sort output files
-    for path in output_dir.iterdir():
+    for path in sorted(output_dir.iterdir()):
         sort_file(path)
+
+    # Detailed keyspace debug output THIS IS SLOW
+    all_keys = set()
+    for outpath in sorted(output_dir.iterdir()):
+        keys = keyspace(outpath)
+        all_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_keys))
 
 
 def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
+    i = 0
     for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, last_two(input_path), last_two(output_path),
+        )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
@@ -247,3 +320,9 @@ def reduce_stage(exe, input_dir, output_dir):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished reduce executions: %s", i+1)
+
+
+def last_two(path):
+    """Return the last two parts of path."""
+    return pathlib.Path(*path.parts[-2:])
