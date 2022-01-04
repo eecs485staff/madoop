@@ -8,6 +8,11 @@ Madoop: Michigan Hadoop
 Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
 ## Quick start
+Download and unpack the example files.
+```console
+$ wget https://github.com/eecs485staff/madoop/releases/download/0.1.0/example.tar.gz
+$ tar -xvzf example.tar.gz
+```
 Install and run an example word count MapReduce program.
 ```console
 $ pip install madoop
