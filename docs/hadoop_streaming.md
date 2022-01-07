@@ -22,6 +22,10 @@ $ tree
 └── reduce.py
 ```
 
+FIXME install madoop
+
+FIXME run madoop, showing the final result
+
 ## Overview
 [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) is a MapReduce API that works with any programming language.  The mapper and the reducer are executables that read input from stdin and write output to stdout.
 
