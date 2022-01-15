@@ -89,7 +89,7 @@ class ExampleAction(argparse.Action):
 
             madoop \\
               -input example/input \\
-              -output output \\
+              -output example/output \\
               -mapper example/map.py \\
               -reducer example/reduce.py\
         """))
