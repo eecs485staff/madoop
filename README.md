@@ -14,10 +14,11 @@ Install Madoop.
 $ pip install madoop
 ```
 
-Download and unpack the example files.
+Create example MapReduce program with input files.
 ```console
-$ wget https://github.com/eecs485staff/madoop/releases/download/0.1.0/example.tar.gz
-$ tar -xvzf example.tar.gz
+$ madoop --example
+$ ls example
+input  map.py  reduce.py
 ```
 
 Run example word count MapReduce program.
