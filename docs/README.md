@@ -289,7 +289,7 @@ if __name__ == "__main__":
 ```
 
 ## Tips and tricks
-These are some pro-tips that `awdeorio` used while writing the instructor solution.
+These are some pro-tips for working with MapReduce programs written in Python for the Hadoop Streaming interface.
 
 ### Debugging
 We encounter a problem if we add a `breakpoint()` in `map.py`.
