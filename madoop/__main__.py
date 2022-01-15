@@ -73,10 +73,13 @@ class ExampleAction(argparse.Action):
 
     Doc: https://docs.python.org/3/library/argparse.html#argparse.Action
     """
+
     def __init__(self, *args, **kwargs):
+        """Call parent class init."""
         super().__init__(*args, **kwargs)
 
     def __call__(self, parser, *args, **kwargs):
+        """Copy example/ directory to PWD."""
         madoop_dir = pathlib.Path(__file__).parent
         src = madoop_dir/"example"
         dst = pathlib.Path()/"example"
