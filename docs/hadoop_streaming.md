@@ -9,12 +9,16 @@ Hadoop Streaming in Python
 
 This tutorial shows how to write MapReduce programs in Python that are compatible with Hadoop Streaming.  We'll use Python's `itertools.groupby()` function to simplify our code.
 
-We'll use files provided in the [example](/example/input).
+Install Madoop, a light weight MapReduce framework for education. Madoop implements the Hadoop Streaming interface.
 ```console
-$ pwd
-/Users/awdeorio/src/eecs485/madoop/example
-$ tree
-.
+$ pip install madoop
+```
+
+We'll use an example MapReduce program and input files provided by Madoop.
+```console
+$ madoop --example
+$ tree example
+example
 ├── input
 │   ├── input01.txt
 │   └── input02.txt
@@ -22,20 +26,16 @@ $ tree
 └── reduce.py
 ```
 
-Install Madoop.
+Execute the example MapReduce program using Madoop and show the output.
 ```console
-$ pip install madoop
-```
-
-Run madoop, showing the final result.
-```console
+$ cd example
 $ madoop \
-  -input example/input \
-  -output example/output \
-  -mapper example/map.py \
-  -reducer example/reduce.py
+  -input input \
+  -output output \
+  -mapper map.py \
+  -reducer reduce.py
   
-$ cat example/output/part-*
+$ cat output/part-*
 Goodbye 1
 Bye 1
 Hadoop 2
