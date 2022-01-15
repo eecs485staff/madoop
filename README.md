@@ -5,7 +5,9 @@ Madoop: Michigan Hadoop
 [![CI main](https://github.com/eecs485staff/madoop/workflows/CI/badge.svg?branch=develop)](https://github.com/eecs485staff/madoop/actions?query=branch%3Adevelop)
 [![codecov](https://codecov.io/gh/eecs485staff/madoop/branch/develop/graph/badge.svg)](https://codecov.io/gh/eecs485staff/madoop)
 
-Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://eecs485staff.github.io/madoop/) interface.  Madoop is implemented in Python and runs on a single machine.
+Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
+
+For an in-depth explanation of how to write MapReduce programs in Python for Hadoop Streaming, see our [Hadoop Streaming tutorial](README_hadoop_streaming.md).
 
 
 ## Quick start
@@ -39,9 +41,6 @@ Hadoop 2
 World 2
 Hello 2
 ```
-
-For an in-depth explanation of the map and reduce code, see the [Hadoop Streaming tutorial](docs/hadoop_streaming.md).
-
 
 ## Comparison with Apache Hadoop and CLI
 Madoop implements a subset of the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  You can simulate the Hadoop Streaming interface at the command line with `cat` and `sort`.

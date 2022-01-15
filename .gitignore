@@ -35,6 +35,3 @@ build/
 
 # macOS system files
 *.DS_Store
-
-# We need Gemfile.lock to make sure local site previews build consistently.
-!Gemfile.lock

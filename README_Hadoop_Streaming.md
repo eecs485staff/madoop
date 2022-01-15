@@ -1,11 +1,5 @@
----
-layout: spec
-title: Hadoop Streaming
----
-
 Hadoop Streaming in Python
 ===========================
-{: .primer-spec-toc-ignore }
 
 This tutorial shows how to write MapReduce programs in Python that are compatible with [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html).  We'll use Python's `itertools.groupby()` function to simplify our code.
 
@@ -58,7 +52,6 @@ for line in sys.stdin:
     for word in words:
         print(f"{word}\t1")
 ```
-{: data-title="map.py" }
 
 The map input format is up to the programmer.  For example:
 ```console
@@ -121,7 +114,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-{: data-title="reduce.py" }
 
 Each reduce input line contains one key-value pair separated by a TAB character.  For example:
 ```
