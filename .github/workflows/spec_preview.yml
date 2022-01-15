@@ -1,0 +1,56 @@
+# GitHub Actions workflow to generate and upload spec previews to
+# Primer Spec Preview (https://github.com/seshrs/primer-spec-preview).
+name: Generate spec preview
+
+# Define conditions for when to run this action.
+# We'll only generate spec previews on Pull Requests, and only when the
+# `docs/` directory has been modified.
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+
+# A workflow run is made up of one or more jobs. Each job has an id.
+# This workflow has only one job that builds and uploads the spec preview.
+jobs:
+  build-and-upload-site:
+    name: Build and upload spec preview
+    # Run the job on an Ubuntu machine. For specifications, see
+    # https://github.com/actions/virtual-environments
+    runs-on: ubuntu-latest
+
+    # Sequence of tasks for this job
+    steps:
+      # Check out latest code using a pre-existing GH action
+      # Docs: https://github.com/actions/checkout
+      - name: 📁 Checkout code
+        uses: actions/checkout@v2
+
+      # A Ruby environment is required to build Jekyll websites. Use the
+      # official GH action provided by Ruby.
+      # Docs: https://github.com/ruby/setup-ruby
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+
+      # Build the Jekyll site. This GH action from the marketplace is
+      # indirectly endorsed by Jekyll, and simply builds the Jekyll site
+      # without deploying it. The Jekyll build output is placed in an `_site/`
+      # directory.
+      # Docs: https://github.com/limjh16/jekyll-action-ts
+      - name: 🛠 Build Jekyll site
+        uses: limjh16/jekyll-action-ts@v2
+        with:
+          enable_cache: true
+
+      # Upload the site to Primer Spec Preview and comment on the PR.
+      # The Primer Spec Preview secret is stored as an encrypted repo or
+      # organization secret named `PRIMER_SPEC_PREVIEW_SECRET`.
+      # Docs: https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-an-organization
+      # Docs: https://github.com/seshrs/upload-to-primer-spec-preview
+      - name: 🚀 Upload to Primer Spec Preview
+        uses: seshrs/upload-to-primer-spec-preview@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIMER_SPEC_PREVIEW_SECRET: ${{ secrets.PRIMER_SPEC_PREVIEW_SECRET }}
