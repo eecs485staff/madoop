@@ -7,7 +7,7 @@ Hadoop Streaming in Python
 ===========================
 {: .primer-spec-toc-ignore }
 
-This tutorial shows how to write MapReduce programs in Python that are compatible with Hadoop Streaming.  We'll use Python's `itertools.groupby()` function to simplify our code.
+This tutorial shows how to write MapReduce programs in Python that are compatible with [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html).  We'll use Python's `itertools.groupby()` function to simplify our code.
 
 Install Madoop, a light weight MapReduce framework for education. Madoop implements the Hadoop Streaming interface.
 ```console

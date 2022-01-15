@@ -5,7 +5,7 @@ Madoop: Michigan Hadoop
 [![CI main](https://github.com/eecs485staff/madoop/workflows/CI/badge.svg?branch=develop)](https://github.com/eecs485staff/madoop/actions?query=branch%3Adevelop)
 [![codecov](https://codecov.io/gh/eecs485staff/madoop/branch/develop/graph/badge.svg)](https://codecov.io/gh/eecs485staff/madoop)
 
-Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
+Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://eecs485staff.github.io/madoop/) interface.  Madoop is implemented in Python and runs on a single machine.
 
 
 ## Quick start
