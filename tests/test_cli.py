@@ -85,3 +85,13 @@ def test_hadoop_arguments(tmpdir):
             stdout=subprocess.PIPE,
             check=True,
         )
+
+
+def test_example(tmpdir):
+    """Example option should copy files."""
+    with tmpdir.as_cwd():
+        subprocess.run(["madoop", "--example"], check=True)
+    assert (tmpdir/"example/input/input01.txt").exists()
+    assert (tmpdir/"example/input/input02.txt").exists()
+    assert (tmpdir/"example/map.py").exists()
+    assert (tmpdir/"example/reduce.py").exists()
