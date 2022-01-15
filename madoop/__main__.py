@@ -82,7 +82,7 @@ class ExampleAction(argparse.Action):
         """Copy example/ directory to PWD."""
         madoop_dir = pathlib.Path(__file__).parent
         src = madoop_dir/"example"
-        dst = pathlib.Path()/"example"
+        dst = pathlib.Path("example")
         if dst.exists():
             print(f"Error: directory already exists: {dst}")
             parser.exit(1)
