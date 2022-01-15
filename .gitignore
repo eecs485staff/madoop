@@ -36,10 +36,5 @@ build/
 # macOS system files
 *.DS_Store
 
-# Output directories
-/output
-
-# Jekyll / GitHub Pages
-
 # We need Gemfile.lock to make sure local site previews build consistently.
 !Gemfile.lock
