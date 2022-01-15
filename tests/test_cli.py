@@ -1,6 +1,7 @@
 """System tests for the command line interface."""
 import subprocess
 import pkg_resources
+import pytest
 from . import utils
 from .utils import TESTDATA_DIR
 
@@ -95,3 +96,7 @@ def test_example(tmpdir):
     assert (tmpdir/"example/input/input02.txt").exists()
     assert (tmpdir/"example/map.py").exists()
     assert (tmpdir/"example/reduce.py").exists()
+
+    # Call it again and it should refuse to clobber
+    with tmpdir.as_cwd(), pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(["madoop", "--example"], check=True)
