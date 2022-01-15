@@ -73,6 +73,7 @@ class ExampleAction(argparse.Action):
 
     Doc: https://docs.python.org/3/library/argparse.html#argparse.Action
     """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, *args, **kwargs):
         """Call parent class init."""
