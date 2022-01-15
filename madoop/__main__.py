@@ -73,6 +73,8 @@ class ExampleAction(argparse.Action):
 
     Doc: https://docs.python.org/3/library/argparse.html#argparse.Action
     """
+
+    # Python 3.6 pylint bug work around
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *args, **kwargs):
