@@ -28,7 +28,7 @@ def main():
     )
     optional_args.add_argument(
         '--example', action=ExampleAction, nargs=0,
-        help="create example MapReduce program",
+        help="create example MapReduce program and input files",
     )
     optional_args.add_argument(
         '-v', '--verbose', action='count', default=0,

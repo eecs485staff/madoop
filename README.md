@@ -19,8 +19,13 @@ $ pip install madoop
 Create example MapReduce program with input files.
 ```console
 $ madoop --example
-$ ls example
-input  map.py  reduce.py
+$ tree example
+example
+├── input
+│   ├── input01.txt
+│   └── input02.txt
+├── map.py
+└── reduce.py
 ```
 
 Run example word count MapReduce program.
