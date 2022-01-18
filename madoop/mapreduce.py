@@ -3,12 +3,13 @@
 Andrew DeOrio <awdeorio@umich.edu>
 
 """
-import collections
-import shutil
-import pathlib
-import subprocess
-import math
 import contextlib
+import hashlib
+import logging
+import math
+import pathlib
+import shutil
+import subprocess
 import tempfile
 from .exceptions import MadoopError
 
@@ -20,6 +21,9 @@ MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 # but will not be more than MAX_NUM_REDUCE
 MAX_NUM_REDUCE = 4
 
+# Madoop logger
+LOGGER = logging.getLogger("madoop")
+
 
 def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     """Madoop API."""
@@ -30,54 +34,53 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     output_dir.mkdir()
 
     # Executable scripts must have valid shebangs
-    check_shebang(map_exe)
-    check_shebang(reduce_exe)
+    is_executable(map_exe)
+    is_executable(reduce_exe)
 
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
+        LOGGER.debug("tmpdir=%s", tmpdir)
 
         # Create stage input and output directory
-        map_input_dir = tmpdir/'mapper-input'
+        map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
-        group_output_dir = tmpdir/'grouper-output'
-        reduce_output_dir = tmpdir/'reducer-output'
+        reduce_input_dir = tmpdir/'reducer-input'
+        reduce_output_dir = tmpdir/'output'
         map_input_dir.mkdir()
         map_output_dir.mkdir()
-        group_output_dir.mkdir()
+        reduce_input_dir.mkdir()
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
         input_dir = pathlib.Path(input_dir)
-        num_map = prepare_input_files(input_dir, map_input_dir)
+        prepare_input_files(input_dir, map_input_dir)
 
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
         reduce_exe = pathlib.Path(reduce_exe).resolve()
 
         # Run the mapping stage
-        print("Starting map stage")
+        LOGGER.info("Starting map stage")
         map_stage(
             exe=map_exe,
             input_dir=map_input_dir,
             output_dir=map_output_dir,
-            num_map=num_map,
         )
 
         # Run the grouping stage
-        print("Starting group stage")
-        num_reduce = group_stage(
+        LOGGER.info("Starting group stage")
+        group_stage(
             input_dir=map_output_dir,
-            output_dir=group_output_dir,
+            output_dir=reduce_input_dir,
         )
 
         # Run the reducing stage
-        print("Starting reduce stage")
+        LOGGER.info("Starting reduce stage")
         reduce_stage(
             exe=reduce_exe,
-            input_dir=group_output_dir,
+            input_dir=reduce_input_dir,
             output_dir=reduce_output_dir,
-            num_reduce=num_reduce,
         )
 
         # Move files from temporary output dir to user-specified output dir
@@ -85,7 +88,13 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             shutil.copy(filename, output_dir)
 
     # Remind user where to find output
-    print(f"Output directory: {output_dir}")
+    total_size = 0
+    for outpath in sorted(output_dir.iterdir()):
+        st_size = outpath.stat().st_size
+        total_size += st_size
+        LOGGER.debug("%s size=%sB", outpath, st_size)
+    LOGGER.debug("total output size=%sB", total_size)
+    LOGGER.info("Output directory: %s", output_dir)
 
 
 def prepare_input_files(input_dir, output_dir):
@@ -95,72 +104,68 @@ def prepare_input_files(input_dir, output_dir):
     to output_dir.  For larger files, split into blocks of MAX_INPUT_SPLIT_SIZE
     bytes and write block to output_dir. Input files will never be combined.
 
-    Return the number of files created. This will be the number of mappers
-    since we will assume that the number of tasks per mapper is 1.  Apache
-    Hadoop has a configurable number of tasks per mapper, however for both
-    simplicity and because our use case has smaller inputs we use 1.
+    The number of files created will be the number of mappers since we will
+    assume that the number of tasks per mapper is 1.  Apache Hadoop has a
+    configurable number of tasks per mapper, however for both simplicity and
+    because our use case has smaller inputs we use 1.
 
     """
     assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
 
-    # Count input files
-    filenames = []
-    for filename in input_dir.glob('*'):
-        if not filename.is_dir():
-            filenames.append(filename)
-
-    # Copy and rename input files
+    # Split and copy input files
     part_num = 0
-    for filename in filenames:
-        # Calculate the number of splits
-        in_file = pathlib.Path(filename)
-        num_split = math.ceil(in_file.stat().st_size / MAX_INPUT_SPLIT_SIZE)
+    total_size = 0
+    for inpath in sorted(input_dir.glob('*')):
+        assert inpath.is_file()
 
-        # create num_split output files
-        out_filenames = [
-            output_dir/part_filename(part_num + i) for i in range(num_split)]
-        part_num += num_split
+        # Compute output filenames
+        st_size = inpath.stat().st_size
+        total_size += st_size
+        n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
+        assert n_splits > 0
+        LOGGER.debug(
+            "input %s size=%sB partitions=%s", inpath, st_size, n_splits
+        )
+        outpaths = [
+            output_dir/part_filename(part_num + i) for i in range(n_splits)
+        ]
+        part_num += n_splits
 
-        # copy to new files
-        with in_file.open(encoding="utf-8") as file:
-            with contextlib.ExitStack() as stack:
-                out_files = [
-                    stack.enter_context(file2.open('w'))
-                    for file2 in out_filenames]
-                for i, line in enumerate(file):
-                    out_files[i % num_split].write(line)
-
-    return part_num
-
-
-def check_num_keys(filename):
-    """Check num keys."""
-    key_instances = 0
-    with open(filename, encoding="utf-8") as file:
-        for _ in file:
-            key_instances += 1
-
-    # implies we are dumping everything into one key
-    if key_instances == 1:
-        raise MadoopError('Single key detected')
+        # Copy to new output files
+        with contextlib.ExitStack() as stack:
+            outfiles = [stack.enter_context(i.open('w')) for i in outpaths]
+            infile = stack.enter_context(inpath.open(encoding="utf-8"))
+            outparent = outpaths[0].parent
+            assert all(i.parent == outparent for i in outpaths)
+            outnames = [i.name for i in outpaths]
+            logging.debug(
+                "partition %s >> %s/{%s}",
+                last_two(inpath), outparent.name, ",".join(outnames),
+            )
+            for i, line in enumerate(infile):
+                outfiles[i % n_splits].write(line)
+    LOGGER.debug("total input size=%sB", total_size)
 
 
-def check_shebang(exe):
-    """Verify correct exe starts with '#!/usr/bin/env python3'.
+def is_executable(exe):
+    """Verify exe is executable and raise exception if it is not.
 
-    We need to verify the shebang manually because subprocess.run() throws
-    confusing errors when it tries to execute a script with an error in the
-    shebang.
+    Execute exe with an empty string input and verify that it returns zero.  We
+    can't just check the executable bit because scripts with incorrect shebangs
+    result in difficult-to-understand error messages.
 
     """
-    exe = pathlib.Path(exe)
-    with exe.open(encoding="utf-8") as infile:
-        line = infile.readline().rstrip()
-    if line != "#!/usr/bin/env python3":
-        raise MadoopError(
-            f"{exe}: invalid shebang on first line '{line}'.  "
-            "Expected '#!/usr/bin/env python3'"
+    try:
+        subprocess.run(
+            str(exe),
+            shell=True,
+            input="".encode(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
         )
+    except subprocess.CalledProcessError as err:
+        raise MadoopError(f"Failed executable test: {err}") from err
 
 
 def part_filename(num):
@@ -174,12 +179,15 @@ def part_filename(num):
     return f"part-{num:05d}"
 
 
-def map_stage(exe, input_dir, output_dir, num_map):
+def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
-    for i in range(num_map):
-        input_path = input_dir/part_filename(i)
+    i = 0
+    for i, input_path in enumerate(sorted(input_dir.iterdir()), 1):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, last_two(input_path), last_two(output_path),
+        )
         with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
@@ -194,90 +202,111 @@ def map_stage(exe, input_dir, output_dir, num_map):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished map executions: %s", i)
 
 
-def group_stage_cat_sort(input_dir, sorted_output_filename):
-    """Concatenate and sort input files, saving to 'sorted_ouput_filename'.
+def sort_file(path):
+    """Sort contents of path, overwriting it."""
+    LOGGER.debug("sort %s", last_two(path))
+    with path.open() as infile:
+        sorted_lines = sorted(infile)
+    with path.open("w") as outfile:
+        outfile.writelines(sorted_lines)
 
-    Set the locale with the LC_ALL environment variable to force an ASCII
-    sort order.
+
+def keyhash(key):
+    """Hash key and return an integer."""
+    hexdigest = hashlib.md5(key.encode("utf-8")).hexdigest()
+    return int(hexdigest, base=16)
+
+
+def partition_keys(inpath, outpaths):
+    """Allocate lines of inpath among outpaths using hash of key."""
+    assert len(outpaths) == MAX_NUM_REDUCE
+    outparent = outpaths[0].parent
+    assert all(i.parent == outparent for i in outpaths)
+    outnames = [i.name for i in outpaths]
+    LOGGER.debug(
+        "partition %s >> %s/{%s}",
+        last_two(inpath), outparent.name, ",".join(outnames),
+    )
+    with contextlib.ExitStack() as stack:
+        outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
+        for line in stack.enter_context(inpath.open()):
+            key = line.partition('\t')[0]
+            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            outfiles[reducer_idx].write(line)
+
+
+def keyspace(path):
+    """Return the number of unique keys in {path}.
+
+    WARNING: This is a terribly slow implementation.  It would be faster to
+    record this information while grouping.x
+
     """
-    input_filenames = input_dir.glob("*")
-    with open(sorted_output_filename, 'w', encoding='utf-8') as outfile:
-        with subprocess.Popen(
-            ["cat", *input_filenames],
-            stdout=subprocess.PIPE,
-            env={'LC_ALL': 'C.UTF-8'},
-        ) as cat_proc, \
-            subprocess.Popen(
-                ["sort"],
-                stdin=cat_proc.stdout,
-                stdout=outfile,
-                env={'LC_ALL': 'C.UTF-8'},
-        ) as sort_proc:
-            cat_proc.wait()
-            sort_proc.wait()
-    assert cat_proc.returncode == 0
-    assert sort_proc.returncode == 0
+    keys = set()
+    with path.open() as infile:
+        for line in infile:
+            key = line.partition('\t')[0]
+            keys.add(key)
+    return keys
 
 
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
-    Concatenate and sort input files to 'sorted.out'. Determine the number of
-    reducers and split 'sorted.out' into that many files.
-
-    Return the number of reducers to be used in the reduce stage.
+    Process each mapper output file, allocating lines to grouper output files
+    using the hash and modulo of the key.
 
     """
-    sorted_output_filename = output_dir/'sorted.out'
-    print(f"+ cat {input_dir}/* | sort > {sorted_output_filename}")
+    # Detailed keyspace debug output THIS IS SLOW
+    all_keys = set()
+    for inpath in sorted(input_dir.iterdir()):
+        keys = keyspace(inpath)
+        all_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_keys))
 
-    # Concatenate and sort
-    group_stage_cat_sort(input_dir, sorted_output_filename)
+    # Compute output filenames
+    outpaths = []
+    for i in range(MAX_NUM_REDUCE):
+        outpaths.append(output_dir/part_filename(i))
 
-    # Write lines to grouper output files.  Round robin allocation by key.
-    with contextlib.ExitStack() as stack:
-        grouper_files = collections.deque(maxlen=MAX_NUM_REDUCE)
-        sorted_output_file = stack.enter_context(sorted_output_filename.open())
-        prev_key = None
-        for lineno, line in enumerate(sorted_output_file):
-            # Parse the line.  Must be two strings separated by a tab.
-            assert '\t' in line, \
-                f"Missing TAB {sorted_output_filename}:{lineno}"
-            key, _ = line.split('\t', maxsplit=1)
+    # Parition input, appending to output files
+    for inpath in sorted(input_dir.iterdir()):
+        partition_keys(inpath, outpaths)
 
-            # If it's a new key, ...
-            if key != prev_key:
-                # Update prev_key
-                prev_key = key
+    # Remove empty output files.  We won't always use the maximum number of
+    # reducers because some MapReduce programs have fewer intermediate keys.
+    for path in sorted(output_dir.iterdir()):
+        if path.stat().st_size == 0:
+            LOGGER.debug("empty partition: rm %s", last_two(path))
+            path.unlink()
 
-                # If using less than the maximum number of reducers, create and
-                # open a new grouper output file.
-                num_grouper_files = len(grouper_files)
-                if num_grouper_files < MAX_NUM_REDUCE:
-                    filename = output_dir/part_filename(num_grouper_files)
-                    file = filename.open('w')
-                    grouper_files.append(stack.enter_context(file))
+    # Sort output files
+    for path in sorted(output_dir.iterdir()):
+        sort_file(path)
 
-                # Rotate circular queue of grouper files
-                grouper_files.rotate(1)
-
-            # Write to grouper output file
-            grouper_files[0].write(line)
-
-    # Number of grouper output files = number of reducers
-    return len(grouper_files)
+    # Detailed keyspace debug output THIS IS SLOW
+    all_keys = set()
+    for outpath in sorted(output_dir.iterdir()):
+        keys = keyspace(outpath)
+        all_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_keys))
 
 
-def reduce_stage(exe, input_dir, output_dir, num_reduce):
+def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
-    for i in range(num_reduce):
-        input_path = input_dir/part_filename(i)
+    i = 0
+    for i, input_path in enumerate(sorted(input_dir.iterdir())):
         output_path = output_dir/part_filename(i)
-        print(f"+ {exe.name} < {input_path} > {output_path}")
-        with open(input_path, encoding="utf-8") as infile, \
-             open(output_path, 'w', encoding="utf-8") as outfile:
+        LOGGER.debug(
+            "%s < %s > %s",
+            exe.name, last_two(input_path), last_two(output_path),
+        )
+        with input_path.open() as infile, output_path.open('w') as outfile:
             try:
                 subprocess.run(
                     str(exe),
@@ -291,3 +320,9 @@ def reduce_stage(exe, input_dir, output_dir, num_reduce):
                     f"Command returned non-zero: "
                     f"{exe} < {input_path} > {output_path}"
                 ) from err
+    LOGGER.info("Finished reduce executions: %s", i+1)
+
+
+def last_two(path):
+    """Return the last two parts of path."""
+    return pathlib.Path(*path.parts[-2:])

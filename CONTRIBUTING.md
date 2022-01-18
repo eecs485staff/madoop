@@ -78,3 +78,11 @@ $ git describe
 X.Y.Z
 $ git push --tags origin main
 ```
+
+Create a release on GitHub using the "Auto-generate release notes" feature. https://github.com/eecs485staff/madoop/releases/new
+
+Upload to PyPI
+```console
+$ python3 setup.py sdist bdist_wheel
+$ twine upload --sign dist/*
+```

@@ -2,6 +2,9 @@
 *.pyc
 __pycache__
 
+# Example input
+/example/
+
 # Python virtual environment 
 /env/
 /env2/
@@ -32,6 +35,3 @@ build/
 
 # macOS system files
 *.DS_Store
-
-# Output directories
-/output

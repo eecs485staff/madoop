@@ -1,73 +1,50 @@
 Madoop: Michigan Hadoop
 =======================
 
+[![PyPI](https://img.shields.io/pypi/v/madoop.svg)](https://pypi.org/project/madoop/)
+[![CI main](https://github.com/eecs485staff/madoop/workflows/CI/badge.svg?branch=develop)](https://github.com/eecs485staff/madoop/actions?query=branch%3Adevelop)
+[![codecov](https://codecov.io/gh/eecs485staff/madoop/branch/develop/graph/badge.svg)](https://codecov.io/gh/eecs485staff/madoop)
+
 Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
+For an in-depth explanation of how to write MapReduce programs in Python for Hadoop Streaming, see our [Hadoop Streaming tutorial](README_hadoop_streaming.md).
+
+
 ## Quick start
-Install and run an example word count MapReduce program.
+Install Madoop.
 ```console
 $ pip install madoop
+```
+
+Create example MapReduce program with input files.
+```console
+$ madoop --example
+$ tree example
+example
+├── input
+│   ├── input01.txt
+│   └── input02.txt
+├── map.py
+└── reduce.py
+```
+
+Run example word count MapReduce program.
+```console
 $ madoop \
   -input example/input \
-  -output output \
+  -output example/output \
   -mapper example/map.py \
   -reducer example/reduce.py
-$ cat output/part-*
-autograder	2
-world	1
-eecs485	1
-goodbye	1
-hello	3
 ```
 
-
-## Example
-We'll walk through the example in the Quick Start again, providing more detail.  For an in-depth explanation of the map and reduce code, see the [Hadoop Streaming tutorial](https://eecs485staff.github.io/p5-search-engine/hadoop_streaming.html).
-
-## Install
-Install Madoop.  Your version might be different.
+Concatenate and print the output.
 ```console
-$ pip install madoop
-$ madoop --version
-Madoop 0.1.0
-```
-
-### Input
-We've provided two small input files.
-```console
-$ cat example/input/input01.txt
-hello world
-hello eecs485
-$ cat example/input/input02.txt
-goodbye autograder
-hello autograder
-```
-
-### Run
-Run a MapReduce word count job.  By default, there will be one mapper for each input file.  Large input files maybe segmented and processed by multiple mappers.
-- `-input DIRECTORY` input directory
-- `-output DIRECTORY` output directory
-- `-mapper FILE` mapper executable
-- `-reducer FILE` reducer executable
-```console
-$ madoop \
-    -input example/input \
-    -output output \
-    -mapper example/map.py \
-    -reducer example/reduce.py
-```
-
-### Output
-Concatenate and print output.  The concatenation of multiple output files may not be sorted.
-```console
-$ ls output
-part-00000  part-00001  part-00002  part-00003
-$ cat output/part-*
-autograder	2
-world	1
-eecs485	1
-goodbye	1
-hello	3
+$ cat example/output/part-*
+Goodbye 1
+Bye 1
+Hadoop 2
+World 2
+Hello 2
 ```
 
 ## Comparison with Apache Hadoop and CLI

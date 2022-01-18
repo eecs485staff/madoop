@@ -4,7 +4,7 @@ name: CI
 # Define conditions for when to run this action
 on:
   pull_request: # Run on all pull requests
-  push: # Run on all pushes to main
+  push: # Run on all pushes to main or develop
     branches:
       - main
       - develop
@@ -49,12 +49,14 @@ jobs:
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
       - name: Run tests
         run: tox
-      # - name: Combine coverage
-      #   run: coverage xml
+
+      # Combine coverage data from all test executions
+      - name: Combine coverage
+        run: coverage xml
 
       # Upload coverage report
       # https://github.com/codecov/codecov-action
-      # - name: Upload coverage report
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     fail_ci_if_error: true
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
