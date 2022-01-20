@@ -87,8 +87,7 @@ class ExampleAction(argparse.Action):
         src = madoop_dir/"example"
         dst = pathlib.Path("example")
         if dst.exists():
-            print(f"Error: directory already exists: {dst}")
-            parser.exit(1)
+            parser.error(f"directory already exists: {dst}")
         shutil.copytree(src, dst)
         print(textwrap.dedent(f"""\
             Created {dst}, try:
