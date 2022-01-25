@@ -262,7 +262,6 @@ def group_stage(input_dir, output_dir):
     using the hash and modulo of the key.
 
     """
-
     # Compute output filenames
     outpaths = []
     for i in range(MAX_NUM_REDUCE):
