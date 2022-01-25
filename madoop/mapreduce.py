@@ -85,11 +85,11 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
 
         # Move files from temporary output dir to user-specified output dir
         total_size = 0
-        for filename in reduce_output_dir.glob("*"):
+        for filename in sorted(reduce_output_dir.glob("*")):
             st_size = filename.stat().st_size
             total_size += st_size
             shutil.copy(filename, output_dir)
-            LOGGER.debug("%s size=%sB", output_dir/filename, st_size)
+            LOGGER.debug("%s size=%sB", output_dir.parent/last_two(filename), st_size)
 
     # Remind user where to find output
     LOGGER.debug("total output size=%sB", total_size)
