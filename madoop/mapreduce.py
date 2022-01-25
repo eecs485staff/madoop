@@ -273,13 +273,13 @@ def group_stage(input_dir, output_dir):
     output_keys = [set() for _ in range(MAX_NUM_REDUCE)]
     for inpath in sorted(input_dir.iterdir()):
         partition_keys(inpath, outpaths, input_keys, output_keys)
-    
+
     all_keys = set()
     for inpath, keys in zip(sorted(input_dir.iterdir()), input_keys):
         all_keys.update(keys)
         LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
     LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_keys))
-        
+
     outnames = [i.name for i in outpaths]
     outparent = outpaths[0].parent
     for inpath in sorted(input_dir.iterdir()):
