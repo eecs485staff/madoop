@@ -224,10 +224,6 @@ def partition_keys(inpath, outpaths, input_keys, output_keys):
     assert len(outpaths) == MAX_NUM_REDUCE
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
-    # LOGGER.debug(
-    #     "partition %s >> %s/{%s}",
-    #     last_two(inpath), outparent.name, ",".join(outnames),
-    # )
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         keys = set()
