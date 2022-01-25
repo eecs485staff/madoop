@@ -219,7 +219,7 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(inpath, outpaths, input_keys):
+def partition_keys(inpath, outpaths, input_keys, output_keys):
     """Allocate lines of inpath among outpaths using hash of key."""
     assert len(outpaths) == MAX_NUM_REDUCE
     outparent = outpaths[0].parent
@@ -236,6 +236,7 @@ def partition_keys(inpath, outpaths, input_keys):
             keys.add(key)
             reducer_idx = keyhash(key) % MAX_NUM_REDUCE
             outfiles[reducer_idx].write(line)
+            output_keys[reducer_idx].add(key)
         input_keys.append(keys)
 
 
@@ -269,11 +270,12 @@ def group_stage(input_dir, output_dir):
 
     # Parition input, appending to output files
     input_keys = []
+    output_keys = [set() for _ in range(MAX_NUM_REDUCE)]
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths, input_keys)
+        partition_keys(inpath, outpaths, input_keys, output_keys)
     
     all_keys = set()
-    for keys in input_keys:
+    for inpath, keys in zip(sorted(input_dir.iterdir()), input_keys):
         all_keys.update(keys)
         LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
     LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_keys))
@@ -298,10 +300,11 @@ def group_stage(input_dir, output_dir):
 
     # Detailed keyspace debug output THIS IS SLOW
     all_keys = set()
-    for outpath in sorted(output_dir.iterdir()):
-        keys = keyspace(outpath)
-        all_keys.update(keys)
-        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
+    output_keys = [keys for keys in output_keys if keys]
+    for outpath, keys in zip(sorted(output_dir.iterdir()), output_keys):
+        if keys:
+            all_keys.update(keys)
+            LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
     LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_keys))
 
 
