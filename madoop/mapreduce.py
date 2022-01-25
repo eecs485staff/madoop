@@ -282,9 +282,8 @@ def group_stage(input_dir, output_dir):
     all_keys = set()
     output_keys = [keys for keys in output_keys if keys]
     for outpath, keys in zip(sorted(output_dir.iterdir()), output_keys):
-        if keys:
-            all_keys.update(keys)
-            LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
+        all_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
     LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_keys))
 
 
