@@ -240,21 +240,6 @@ def partition_keys(inpath, outpaths, input_keys, output_keys):
         input_keys.append(keys)
 
 
-def keyspace(path):
-    """Return the number of unique keys in {path}.
-
-    WARNING: This is a terribly slow implementation.  It would be faster to
-    record this information while grouping.x
-
-    """
-    keys = set()
-    with path.open() as infile:
-        for line in infile:
-            key = line.partition('\t')[0]
-            keys.add(key)
-    return keys
-
-
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
