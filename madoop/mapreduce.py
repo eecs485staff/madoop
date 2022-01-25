@@ -89,7 +89,8 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
             st_size = filename.stat().st_size
             total_size += st_size
             shutil.copy(filename, output_dir)
-            LOGGER.debug("%s size=%sB", output_dir.parent/last_two(filename), st_size)
+            output_path = output_dir.parent/last_two(filename)
+            LOGGER.debug("%s size=%sB", output_path, st_size)
 
     # Remind user where to find output
     LOGGER.debug("total output size=%sB", total_size)
