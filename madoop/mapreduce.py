@@ -241,6 +241,7 @@ def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
             outpath = outpaths[reducer_idx]
             output_keys_stats[outpath].add(key)
 
+
 def group_stage(input_dir, output_dir):
     """Run group stage.
 
@@ -293,7 +294,8 @@ def group_stage(input_dir, output_dir):
     for outpath, keys in sorted(output_keys_stats.items()):
         all_output_keys.update(keys)
         LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_output_keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name,
+                 len(all_output_keys))
 
 
 def reduce_stage(exe, input_dir, output_dir):
