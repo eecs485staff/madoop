@@ -4,6 +4,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 """
 import contextlib
+import collections
 import hashlib
 import logging
 import math
@@ -84,15 +85,15 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         )
 
         # Move files from temporary output dir to user-specified output dir
-        for filename in reduce_output_dir.glob("*"):
+        total_size = 0
+        for filename in sorted(reduce_output_dir.glob("*")):
+            st_size = filename.stat().st_size
+            total_size += st_size
             shutil.copy(filename, output_dir)
+            output_path = output_dir.parent/last_two(filename)
+            LOGGER.debug("%s size=%sB", output_path, st_size)
 
     # Remind user where to find output
-    total_size = 0
-    for outpath in sorted(output_dir.iterdir()):
-        st_size = outpath.stat().st_size
-        total_size += st_size
-        LOGGER.debug("%s size=%sB", outpath, st_size)
     LOGGER.debug("total output size=%sB", total_size)
     LOGGER.info("Output directory: %s", output_dir)
 
@@ -220,37 +221,25 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(inpath, outpaths):
-    """Allocate lines of inpath among outpaths using hash of key."""
+def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
+    """Allocate lines of inpath among outpaths using hash of key.
+
+    Update the data structures provided by the caller input_keys_stats and
+    output_keys_stats.  Both map a filename to a set of of keys.
+
+    """
     assert len(outpaths) == MAX_NUM_REDUCE
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
-    outnames = [i.name for i in outpaths]
-    LOGGER.debug(
-        "partition %s >> %s/{%s}",
-        last_two(inpath), outparent.name, ",".join(outnames),
-    )
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         for line in stack.enter_context(inpath.open()):
             key = line.partition('\t')[0]
+            input_keys_stats[inpath].add(key)
             reducer_idx = keyhash(key) % MAX_NUM_REDUCE
             outfiles[reducer_idx].write(line)
-
-
-def keyspace(path):
-    """Return the number of unique keys in {path}.
-
-    WARNING: This is a terribly slow implementation.  It would be faster to
-    record this information while grouping.x
-
-    """
-    keys = set()
-    with path.open() as infile:
-        for line in infile:
-            key = line.partition('\t')[0]
-            keys.add(key)
-    return keys
+            outpath = outpaths[reducer_idx]
+            output_keys_stats[outpath].add(key)
 
 
 def group_stage(input_dir, output_dir):
@@ -260,22 +249,34 @@ def group_stage(input_dir, output_dir):
     using the hash and modulo of the key.
 
     """
-    # Detailed keyspace debug output THIS IS SLOW
-    all_keys = set()
-    for inpath in sorted(input_dir.iterdir()):
-        keys = keyspace(inpath)
-        all_keys.update(keys)
-        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_keys))
-
     # Compute output filenames
     outpaths = []
     for i in range(MAX_NUM_REDUCE):
         outpaths.append(output_dir/part_filename(i))
 
-    # Parition input, appending to output files
+    # Track keyspace stats, map filename -> set of keys
+    input_keys_stats = collections.defaultdict(set)
+    output_keys_stats = collections.defaultdict(set)
+
+    # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths)
+        partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats)
+
+    # Log input keyspace stats
+    all_input_keys = set()
+    for inpath, keys in sorted(input_keys_stats.items()):
+        all_input_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_input_keys))
+
+    # Log partition input and output filenames
+    outnames = [i.name for i in outpaths]
+    outparent = outpaths[0].parent
+    for inpath in sorted(input_keys_stats.keys()):
+        LOGGER.debug(
+            "partition %s >> %s/{%s}",
+            last_two(inpath), outparent.name, ",".join(outnames),
+        )
 
     # Remove empty output files.  We won't always use the maximum number of
     # reducers because some MapReduce programs have fewer intermediate keys.
@@ -288,13 +289,13 @@ def group_stage(input_dir, output_dir):
     for path in sorted(output_dir.iterdir()):
         sort_file(path)
 
-    # Detailed keyspace debug output THIS IS SLOW
-    all_keys = set()
-    for outpath in sorted(output_dir.iterdir()):
-        keys = keyspace(outpath)
-        all_keys.update(keys)
+    # Log output keyspace stats
+    all_output_keys = set()
+    for outpath, keys in sorted(output_keys_stats.items()):
+        all_output_keys.update(keys)
         LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name,
+                 len(all_output_keys))
 
 
 def reduce_stage(exe, input_dir, output_dir):
