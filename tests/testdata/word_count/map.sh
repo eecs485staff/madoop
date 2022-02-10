@@ -9,4 +9,4 @@
 set -Eeuo pipefail
 
 # Map
-cat | tr '[ \t]' '\n' | tr '[:upper:]' '[:lower:]' | awk '{print $1"\t1"}'
+cat | tr '[ \t]' '\n' | awk '{print $1"\t1"}'

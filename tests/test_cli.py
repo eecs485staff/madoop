@@ -91,7 +91,12 @@ def test_hadoop_arguments(tmpdir):
 def test_example(tmpdir):
     """Example option should copy files."""
     with tmpdir.as_cwd():
-        subprocess.run(["madoop", "--example"], check=True)
+        subprocess.run(
+            ["madoop", "--example"],
+            check=True,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
     assert (tmpdir/"example/input/input01.txt").exists()
     assert (tmpdir/"example/input/input02.txt").exists()
     assert (tmpdir/"example/map.py").exists()
@@ -99,4 +104,9 @@ def test_example(tmpdir):
 
     # Call it again and it should refuse to clobber
     with tmpdir.as_cwd(), pytest.raises(subprocess.CalledProcessError):
-        subprocess.run(["madoop", "--example"], check=True)
+        subprocess.run(
+            ["madoop", "--example"],
+            check=True,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
