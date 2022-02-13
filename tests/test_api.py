@@ -55,3 +55,17 @@ def test_missing_shebang(tmpdir):
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce_invalid.py",
         )
+
+def test_empty_inputs(tmpdir):
+    "Empty input files should not raise an error."""
+    with tmpdir.as_cwd():
+        madoop.mapreduce(
+            input_dir=TESTDATA_DIR/"word_count/input_empty",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
