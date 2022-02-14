@@ -123,19 +123,10 @@ def prepare_input_files(input_dir, output_dir):
         st_size = inpath.stat().st_size
         total_size += st_size
         n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
+        n_splits = 1 if not n_splits else n_splits  # Handle empty input file
         LOGGER.debug(
             "input %s size=%sB partitions=%s", inpath, st_size, n_splits
         )
-
-        # Check for empty input file
-        if not n_splits:
-            LOGGER.debug(
-                "partition %s >> %s/{%s}",
-                last_two(inpath), output_dir.name, part_filename(0),
-            )
-            (output_dir/part_filename(0)).touch()
-            continue
-
         outpaths = [
             output_dir/part_filename(part_num + i) for i in range(n_splits)
         ]
