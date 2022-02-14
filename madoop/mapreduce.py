@@ -123,7 +123,7 @@ def prepare_input_files(input_dir, output_dir):
         st_size = inpath.stat().st_size
         total_size += st_size
         n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
-        assert n_splits > 0
+        n_splits = 1 if not n_splits else n_splits  # Handle empty input file
         LOGGER.debug(
             "input %s size=%sB partitions=%s", inpath, st_size, n_splits
         )
