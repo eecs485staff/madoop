@@ -123,7 +123,7 @@ def prepare_input_files(input_dir, output_dir):
         st_size = inpath.stat().st_size
         total_size += st_size
         n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
-        assert n_splits > 0
+        n_splits = 1 if not n_splits else n_splits  # Handle empty input file
         LOGGER.debug(
             "input %s size=%sB partitions=%s", inpath, st_size, n_splits
         )
@@ -277,13 +277,6 @@ def group_stage(input_dir, output_dir):
             "partition %s >> %s/{%s}",
             last_two(inpath), outparent.name, ",".join(outnames),
         )
-
-    # Remove empty output files.  We won't always use the maximum number of
-    # reducers because some MapReduce programs have fewer intermediate keys.
-    for path in sorted(output_dir.iterdir()):
-        if path.stat().st_size == 0:
-            LOGGER.debug("empty partition: rm %s", last_two(path))
-            path.unlink()
 
     # Sort output files
     for path in sorted(output_dir.iterdir()):
