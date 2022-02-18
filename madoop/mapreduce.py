@@ -278,6 +278,13 @@ def group_stage(input_dir, output_dir):
             last_two(inpath), outparent.name, ",".join(outnames),
         )
 
+    # Remove empty output files.  We won't always use the maximum number of
+    # reducers because some MapReduce programs have fewer intermediate keys.
+    for path in sorted(output_dir.iterdir()):
+        if path.stat().st_size == 0:
+            LOGGER.debug("empty partition: rm %s", last_two(path))
+            path.unlink()
+
     # Sort output files
     for path in sorted(output_dir.iterdir()):
         sort_file(path)
