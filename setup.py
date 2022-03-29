@@ -20,6 +20,10 @@ setuptools.setup(
     url="https://github.com/eecs485staff/madoop/",
     license="MIT",
     packages=["madoop"],
+    package_data={"madoop": [
+        "example/*.py",
+        "example/input/*.txt",
+    ]},
     keywords=[
         "madoop", "Hadoop", "MapReduce", "Michigan Hadoop", "Hadoop Streaming"
     ],
