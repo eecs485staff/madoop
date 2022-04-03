@@ -7,7 +7,7 @@ Madoop: Michigan Hadoop
 
 Michigan Hadoop (`madoop`) is a light weight MapReduce framework for education.  Madoop implements the [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) interface.  Madoop is implemented in Python and runs on a single machine.
 
-For an in-depth explanation of how to write MapReduce programs in Python for Hadoop Streaming, see our [Hadoop Streaming tutorial](README_hadoop_streaming.md).
+For an in-depth explanation of how to write MapReduce programs in Python for Hadoop Streaming, see our [Hadoop Streaming tutorial](README_Hadoop_Streaming.md).
 
 
 ## Quick start
