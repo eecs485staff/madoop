@@ -255,7 +255,11 @@ World	2
 Here's a template you can copy-paste to get started on a reducer.  The only part you need to edit is the `"IMPLEMENT ME"` line.
 ```python
 #!/usr/bin/env python3
-"""Word count reducer."""
+"""
+Template reducer.
+
+https://github.com/eecs485staff/madoop/blob/main/README_Hadoop_Streaming.md
+"""
 import sys
 import itertools
 
