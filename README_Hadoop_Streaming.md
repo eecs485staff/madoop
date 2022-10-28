@@ -248,7 +248,7 @@ def reduce_one_group(key, group):
 
 Finally, we can run our entire MapReduce program.
 ```console
-$ cat input/* | ./map.py | sort| ./reduce.py
+$ cat input/* | ./map.py | sort | ./reduce.py
 Bye	1
 Goodbye	1
 Hadoop	2
