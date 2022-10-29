@@ -22,12 +22,11 @@ example
 
 Execute the example MapReduce program using Madoop and show the output.
 ```console
-$ cd example
 $ madoop \
-  -input input \
-  -output output \
-  -mapper map.py \
-  -reducer reduce.py
+  -input example/input \
+  -output example/output \
+  -mapper example/map.py \
+  -reducer example/reduce.py
   
 $ cat output/part-*
 Goodbye 1
