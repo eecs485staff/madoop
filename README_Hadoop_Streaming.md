@@ -22,12 +22,11 @@ example
 
 Execute the example MapReduce program using Madoop and show the output.
 ```console
-$ cd example
 $ madoop \
-  -input input \
-  -output output \
-  -mapper map.py \
-  -reducer reduce.py
+  -input example/input \
+  -output example/output \
+  -mapper example/map.py \
+  -reducer example/reduce.py
   
 $ cat output/part-*
 Goodbye 1
@@ -112,7 +111,7 @@ def main():
         word, _, count = line.partition("\t")
         word_count[word] += int(count)
     for word, count in word_count.items():
-        print(f"{word}\t{count}")
+        print(f"{word} {count}")
 
 if __name__ == "__main__":
     main()
@@ -154,9 +153,9 @@ The reduce output format is up to the programmer.  Here's how to run the whole w
 $ cat input/input* | python3 map.py | sort | python3 reduce.py
 Bye	1
 Goodbye	1
-Hadoop	2
-Hello	2
-World	2
+Hadoop 2
+Hello 2
+World 2
 ```
 
 ## `itertools.groupby()`
@@ -175,7 +174,7 @@ def main():
         word, _, count = line.partition("\t")
         word_count[word] += int(count)
     for word, count in word_count.items():
-        print(f"{word}\t{count}")
+        print(f"{word} {count}")
 ```
 
 If one reducer execution received one group, we could simplify the reducer and use only O(1) memory.
@@ -187,7 +186,7 @@ def reduce_one_group(key, group):
     for line in group:
         count = line.partition("\t")[2]
         word_count += int(count)
-    print(f"{key}\t{word_count}")
+    print(f"{key} {word_count}")
 ```
 
 If one reducer execution input contains multiple groups, how can we process one group at a time?  We'll use `itertools.groupby()`.
@@ -241,7 +240,7 @@ def reduce_one_group(key, group):
     for line in group:
         count = line.partition("\t")[2]
         word_count += int(count)
-    print(f"{key}\t{word_count}")
+    print(f"{key} {word_count}")
 ```
 
 Finally, we can run our entire MapReduce program.
@@ -249,9 +248,9 @@ Finally, we can run our entire MapReduce program.
 $ cat input/* | ./map.py | sort | ./reduce.py
 Bye	1
 Goodbye	1
-Hadoop	2
-Hello	2
-World	2
+Hadoop 2
+Hello 2
+World 2
 ```
 
 ### Template reducer
