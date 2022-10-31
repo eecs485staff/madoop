@@ -156,6 +156,7 @@ def is_executable(exe):
     result in difficult-to-understand error messages.
 
     """
+    exe = pathlib.Path(exe).resolve()
     try:
         subprocess.run(
             str(exe),
