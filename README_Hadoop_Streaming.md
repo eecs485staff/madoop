@@ -39,6 +39,9 @@ Hello 2
 ## Overview
 [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) is a MapReduce API that works with any programming language.  The mapper and the reducer are executables that read input from stdin and write output to stdout.
 
+## Partition
+The MapReduce framework begins by partitioning (splitting) the input. If the input size is large, a real MapReduce framework will break it up into smaller chunks. Each Map execution will process one input partition. In this tutorial, we're faking MapReduce at the command line with a single mapper, so we'll skip the partition step.
+
 ## Map
 The mapper is an executable that reads input from stdin and writes output to stdout.  Here's an example `map.py` which is part of a word count MapReduce program.
 ```python
@@ -242,7 +245,7 @@ def reduce_one_group(key, group):
 
 Finally, we can run our entire MapReduce program.
 ```console
-$ cat input/* | ./map.py | sort| ./reduce.py
+$ cat input/* | ./map.py | sort | ./reduce.py
 Bye	1
 Goodbye	1
 Hadoop 2
