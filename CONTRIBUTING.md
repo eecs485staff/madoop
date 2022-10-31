@@ -5,7 +5,7 @@ Contributing to Madoop
 Set up a development virtual environment.
 ```console
 $ python3 -m venv .venv
-$ source env/bin/activate
+$ source .venv/bin/activate
 $ pip install --editable .[dev,test]
 ```
 
