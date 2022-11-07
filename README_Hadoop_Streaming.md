@@ -22,12 +22,11 @@ example
 
 Execute the example MapReduce program using Madoop and show the output.
 ```console
-$ cd example
 $ madoop \
-  -input input \
-  -output output \
-  -mapper map.py \
-  -reducer reduce.py
+  -input example/input \
+  -output example/output \
+  -mapper example/map.py \
+  -reducer example/reduce.py
   
 $ cat output/part-*
 Goodbye 1
@@ -39,6 +38,9 @@ Hello 2
 
 ## Overview
 [Hadoop Streaming](https://hadoop.apache.org/docs/r1.2.1/streaming.html) is a MapReduce API that works with any programming language.  The mapper and the reducer are executables that read input from stdin and write output to stdout.
+
+## Partition
+The MapReduce framework begins by partitioning (splitting) the input. If the input size is large, a real MapReduce framework will break it up into smaller chunks. Each Map execution will process one input partition. In this tutorial, we're faking MapReduce at the command line with a single mapper, so we'll skip the partition step.
 
 ## Map
 The mapper is an executable that reads input from stdin and writes output to stdout.  Here's an example `map.py` which is part of a word count MapReduce program.
@@ -109,7 +111,7 @@ def main():
         word, _, count = line.partition("\t")
         word_count[word] += int(count)
     for word, count in word_count.items():
-        print(f"{word}\t{count}")
+        print(f"{word} {count}")
 
 if __name__ == "__main__":
     main()
@@ -151,9 +153,9 @@ The reduce output format is up to the programmer.  Here's how to run the whole w
 $ cat input/input* | python3 map.py | sort | python3 reduce.py
 Bye	1
 Goodbye	1
-Hadoop	2
-Hello	2
-World	2
+Hadoop 2
+Hello 2
+World 2
 ```
 
 ## `itertools.groupby()`
@@ -172,7 +174,7 @@ def main():
         word, _, count = line.partition("\t")
         word_count[word] += int(count)
     for word, count in word_count.items():
-        print(f"{word}\t{count}")
+        print(f"{word} {count}")
 ```
 
 If one reducer execution received one group, we could simplify the reducer and use only O(1) memory.
@@ -184,7 +186,7 @@ def reduce_one_group(key, group):
     for line in group:
         count = line.partition("\t")[2]
         word_count += int(count)
-    print(f"{key}\t{word_count}")
+    print(f"{key} {word_count}")
 ```
 
 If one reducer execution input contains multiple groups, how can we process one group at a time?  We'll use `itertools.groupby()`.
@@ -238,24 +240,28 @@ def reduce_one_group(key, group):
     for line in group:
         count = line.partition("\t")[2]
         word_count += int(count)
-    print(f"{key}\t{word_count}")
+    print(f"{key} {word_count}")
 ```
 
 Finally, we can run our entire MapReduce program.
 ```console
-$ cat input/* | ./map.py | sort| ./reduce.py
+$ cat input/* | ./map.py | sort | ./reduce.py
 Bye	1
 Goodbye	1
-Hadoop	2
-Hello	2
-World	2
+Hadoop 2
+Hello 2
+World 2
 ```
 
 ### Template reducer
 Here's a template you can copy-paste to get started on a reducer.  The only part you need to edit is the `"IMPLEMENT ME"` line.
 ```python
 #!/usr/bin/env python3
-"""Word count reducer."""
+"""
+Template reducer.
+
+https://github.com/eecs485staff/madoop/blob/main/README_Hadoop_Streaming.md
+"""
 import sys
 import itertools
 
