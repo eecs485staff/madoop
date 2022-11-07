@@ -14,7 +14,7 @@ setuptools.setup(
     description="A light weight MapReduce framework for education.",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    version="1.0.1",
+    version="1.0.2",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/eecs485staff/madoop/",
