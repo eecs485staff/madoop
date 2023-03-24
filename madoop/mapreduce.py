@@ -19,14 +19,13 @@ from .exceptions import MadoopError
 MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 
 # The number of reducers is dynamically determined by the number of unique keys
-# but will not be more than MAX_NUM_REDUCE
-MAX_NUM_REDUCE = 4
+# but will not be more than num_reducers
 
 # Madoop logger
 LOGGER = logging.getLogger("madoop")
 
 
-def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
+def mapreduce(input_dir, output_dir, map_exe, reduce_exe, num_reducers):
     """Madoop API."""
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
@@ -74,6 +73,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         group_stage(
             input_dir=map_output_dir,
             output_dir=reduce_input_dir,
+            num_reducers=num_reducers
         )
 
         # Run the reducing stage
@@ -222,14 +222,14 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
+def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers):
     """Allocate lines of inpath among outpaths using hash of key.
 
     Update the data structures provided by the caller input_keys_stats and
     output_keys_stats.  Both map a filename to a set of of keys.
 
     """
-    assert len(outpaths) == MAX_NUM_REDUCE
+    assert len(outpaths) == num_reducers
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
     with contextlib.ExitStack() as stack:
@@ -237,13 +237,13 @@ def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
         for line in stack.enter_context(inpath.open()):
             key = line.partition('\t')[0]
             input_keys_stats[inpath].add(key)
-            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            reducer_idx = keyhash(key) % num_reducers
             outfiles[reducer_idx].write(line)
             outpath = outpaths[reducer_idx]
             output_keys_stats[outpath].add(key)
 
 
-def group_stage(input_dir, output_dir):
+def group_stage(input_dir, output_dir, num_reducers):
     """Run group stage.
 
     Process each mapper output file, allocating lines to grouper output files
@@ -251,8 +251,9 @@ def group_stage(input_dir, output_dir):
 
     """
     # Compute output filenames
+    LOGGER.debug("%s reducers", num_reducers)
     outpaths = []
-    for i in range(MAX_NUM_REDUCE):
+    for i in range(num_reducers):
         outpaths.append(output_dir/part_filename(i))
 
     # Track keyspace stats, map filename -> set of keys
@@ -261,7 +262,7 @@ def group_stage(input_dir, output_dir):
 
     # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats)
+        partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers)
 
     # Log input keyspace stats
     all_input_keys = set()
