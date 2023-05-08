@@ -21,7 +21,7 @@ jobs:
     strategy:
       # Define OS and Python versions to use. 3.x is the latest minor version.
       matrix:
-        python-version: ["3.6", "3.x"]  # 3.x is the latest minor version
+        python-version: ["3.x"]  # 3.x is the latest minor version
         os: [ubuntu-latest]
 
     # Sequence of tasks for this job
