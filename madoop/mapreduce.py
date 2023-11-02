@@ -222,7 +222,12 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers):
+def partition_keys(
+        inpath,
+        outpaths,
+        input_keys_stats,
+        output_keys_stats,
+        num_reducers):
     """Allocate lines of inpath among outpaths using hash of key.
 
     Update the data structures provided by the caller input_keys_stats and
@@ -262,7 +267,8 @@ def group_stage(input_dir, output_dir, num_reducers):
 
     # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers)
+        partition_keys(inpath, outpaths, input_keys_stats,
+                       output_keys_stats, num_reducers)
 
     # Log input keyspace stats
     all_input_keys = set()

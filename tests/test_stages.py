@@ -23,6 +23,7 @@ def test_group_stage(tmpdir):
     group_stage(
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=Path(tmpdir),
+        num_reducers=4,
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/grouper-output",
