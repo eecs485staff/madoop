@@ -26,7 +26,7 @@ MAX_NUM_REDUCE = 4
 LOGGER = logging.getLogger("madoop")
 
 
-def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
+def mapreduce(input_path, output_dir, map_exe, reduce_exe):
     """Madoop API."""
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
@@ -54,8 +54,8 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
-        input_dir = pathlib.Path(input_dir)
-        prepare_input_files(input_dir, map_input_dir)
+        input_path = pathlib.Path(input_path)
+        prepare_input_files(input_path, map_input_dir)
 
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
@@ -98,7 +98,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     LOGGER.info("Output directory: %s", output_dir)
 
 
-def prepare_input_files(input_dir, output_dir):
+def prepare_input_files(input_path, output_dir):
     """Copy and split input files.  Rename to part-00000, part-00001, etc.
 
     If a file in input_dir is smaller than MAX_INPUT_SPLIT_SIZE, then copy it
@@ -111,12 +111,24 @@ def prepare_input_files(input_dir, output_dir):
     because our use case has smaller inputs we use 1.
 
     """
-    assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
+    # Build a list of input files.  If input_path is a file, then use it.  If
+    # input_path is a directory, then grab all the *files* inside.
+    input_paths = []
+    if input_path.is_dir():
+        for path in sorted(input_path.glob('*')):
+            if path.is_file():
+                input_paths.append(path)
+            else:
+                LOGGER.warning(f"Ignoring non-file: {path}")
+    elif input_path.is_file():
+        input_paths.append(input_path)
+    assert input_paths, f"No input: {input_path}"
+
 
     # Split and copy input files
     part_num = 0
     total_size = 0
-    for inpath in sorted(input_dir.glob('*')):
+    for inpath in input_paths:
         assert inpath.is_file()
 
         # Compute output filenames
