@@ -112,24 +112,9 @@ def prepare_input_files(input_path, output_dir):
     because our use case has smaller inputs we use 1.
 
     """
-    # Build a list of input files.  If input_path is a file, then use it.  If
-    # input_path is a directory, then grab all the *files* inside.
-    input_paths = []
-    if input_path.is_dir():
-        for path in sorted(input_path.glob('*')):
-            if path.is_file():
-                input_paths.append(path)
-            else:
-                LOGGER.warning("Ignoring non-file: %s", path)
-    elif input_path.is_file():
-        input_paths.append(input_path)
-    assert input_paths, f"No input: {input_path}"
-
-
-    # Split and copy input files
     part_num = 0
     total_size = 0
-    for inpath in input_paths:
+    for inpath in normalize_input_paths(input_path):
         assert inpath.is_file()
 
         # Compute output filenames
@@ -159,6 +144,26 @@ def prepare_input_files(input_path, output_dir):
             for i, line in enumerate(infile):
                 outfiles[i % n_splits].write(line)
     LOGGER.debug("total input size=%sB", total_size)
+
+
+def normalize_input_paths(input_path):
+    """Return a list of filtered input files.
+
+    If input_path is a file, then use it.  If input_path is a directory, then
+    grab all the *files* inside.  Ignore subdirectories.
+
+    """
+    input_paths = []
+    if input_path.is_dir():
+        for path in sorted(input_path.glob('*')):
+            if path.is_file():
+                input_paths.append(path)
+            else:
+                LOGGER.warning("Ignoring non-file: %s", path)
+    elif input_path.is_file():
+        input_paths.append(input_path)
+    assert input_paths, f"No input: {input_path}"
+    return input_paths
 
 
 def is_executable(exe):
