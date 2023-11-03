@@ -101,9 +101,10 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe):
 def prepare_input_files(input_path, output_dir):
     """Copy and split input files.  Rename to part-00000, part-00001, etc.
 
-    If a file in input_dir is smaller than MAX_INPUT_SPLIT_SIZE, then copy it
-    to output_dir.  For larger files, split into blocks of MAX_INPUT_SPLIT_SIZE
-    bytes and write block to output_dir. Input files will never be combined.
+    The input_path can be a file or a directory of files.  If a file is smaller
+    than MAX_INPUT_SPLIT_SIZE, then copy it to output_dir.  For larger files,
+    split into blocks of MAX_INPUT_SPLIT_SIZE bytes and write block to
+    output_dir. Input files will never be combined.
 
     The number of files created will be the number of mappers since we will
     assume that the number of tasks per mapper is 1.  Apache Hadoop has a
@@ -119,7 +120,7 @@ def prepare_input_files(input_path, output_dir):
             if path.is_file():
                 input_paths.append(path)
             else:
-                LOGGER.warning(f"Ignoring non-file: {path}")
+                LOGGER.warning("Ignoring non-file: %s", path)
     elif input_path.is_file():
         input_paths.append(input_path)
     assert input_paths, f"No input: {input_path}"
