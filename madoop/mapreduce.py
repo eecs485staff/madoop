@@ -117,6 +117,10 @@ def prepare_input_files(input_dir, output_dir):
     part_num = 0
     total_size = 0
     for inpath in sorted(input_dir.glob('*')):
+        # Skip subdirectories
+        if inpath.is_dir():
+            continue
+
         assert inpath.is_file()
 
         # Compute output filenames
