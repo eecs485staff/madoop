@@ -25,7 +25,7 @@ def test_2_reducers(tmpdir):
     """Run a simple MapReduce job with 2 reducers."""
     with tmpdir.as_cwd():
         madoop.mapreduce(
-            input_dir=TESTDATA_DIR/"word_count/input",
+            input_path=TESTDATA_DIR/"word_count/input",
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
@@ -85,6 +85,7 @@ def test_empty_inputs(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
@@ -100,6 +101,7 @@ def test_single_input_file(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
