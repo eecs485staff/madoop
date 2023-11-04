@@ -73,10 +73,27 @@ def test_empty_inputs(tmpdir):
 
 
 def test_single_input_file(tmpdir):
-    """Run a simple MapReduce job with an inpput file instead of dir."""
+    """Run a simple MapReduce job with an input file instead of dir."""
     with tmpdir.as_cwd():
         madoop.mapreduce(
             input_path=TESTDATA_DIR/"word_count/input-single-file.txt",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
+
+
+def test_ignores_subdirs(tmpdir):
+    """Run a simple MapReduce job with an input directory containing a
+    subdirectory. The subdirectory should be gracefully ignored.
+    """
+    with tmpdir.as_cwd():
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count/input_with_subdir",
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
