@@ -35,7 +35,7 @@ def main():
         help="verbose output"
     )
     optional_args.add_argument(
-        '-numReduceTasks', dest='N', default=4,
+        '-numReduceTasks', dest='num_reducers', default=4,
         help="specify the number of reducers"
     )
     required_args = parser.add_argument_group('required arguments')
@@ -64,7 +64,7 @@ def main():
             output_dir=args.output,
             map_exe=args.mapper,
             reduce_exe=args.reducer,
-            num_reducers=int(args.N)
+            num_reducers=int(args.num_reducers)
         )
     except MadoopError as err:
         sys.exit(f"Error: {err}")
