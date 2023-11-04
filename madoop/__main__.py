@@ -36,7 +36,7 @@ def main():
     )
     optional_args.add_argument(
         '-numReduceTasks', dest='num_reducers', default=4,
-        help="specify the number of reducers"
+        help="hint the number of reducers"
     )
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-input', dest='input', required=True)
