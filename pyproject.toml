@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "madoop"
+version = "1.1.0"
+description="A light weight MapReduce framework for education."
+license = {file = "LICENSE"}
+authors = [
+    {name = "Andrew DeOrio", email = "awdeorio@umich.edu"}
+]
+readme = "README.md"
+keywords = [
+  "madoop", "Hadoop", "MapReduce", "Michigan Hadoop", "Hadoop Streaming"
+]
+requires-python = ">=3.6"
+
+[project.urls]
+repository = "https://github.com/eecs485staff/madoop/"
+documentation = "https://github.com/eecs485staff/madoop/blob/develop/README_Hadoop_Streaming.md#hadoop-streaming-in-python"
+
+[project.scripts]
+madoop = "madoop.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "pdbpp",
+    "build",
+    "twine",
+    "tox",
+    "check-manifest",
+    "freezegun",
+    "pycodestyle",
+    "pydocstyle",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["madoop*"]

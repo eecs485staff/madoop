@@ -83,6 +83,6 @@ Create a release on GitHub using the "Auto-generate release notes" feature. http
 
 Upload to PyPI
 ```console
-$ python3 setup.py sdist bdist_wheel
+$ python3 -m build
 $ twine upload --sign dist/*
 ```

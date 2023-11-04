@@ -19,14 +19,13 @@ from .exceptions import MadoopError
 MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
 
 # The number of reducers is dynamically determined by the number of unique keys
-# but will not be more than MAX_NUM_REDUCE
-MAX_NUM_REDUCE = 4
+# but will not be more than num_reducers
 
 # Madoop logger
 LOGGER = logging.getLogger("madoop")
 
 
-def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
+def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
     """Madoop API."""
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
@@ -54,8 +53,8 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
-        input_dir = pathlib.Path(input_dir)
-        prepare_input_files(input_dir, map_input_dir)
+        input_path = pathlib.Path(input_path)
+        prepare_input_files(input_path, map_input_dir)
 
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
@@ -74,6 +73,7 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
         group_stage(
             input_dir=map_output_dir,
             output_dir=reduce_input_dir,
+            num_reducers=num_reducers
         )
 
         # Run the reducing stage
@@ -98,12 +98,13 @@ def mapreduce(input_dir, output_dir, map_exe, reduce_exe):
     LOGGER.info("Output directory: %s", output_dir)
 
 
-def prepare_input_files(input_dir, output_dir):
+def prepare_input_files(input_path, output_dir):
     """Copy and split input files.  Rename to part-00000, part-00001, etc.
 
-    If a file in input_dir is smaller than MAX_INPUT_SPLIT_SIZE, then copy it
-    to output_dir.  For larger files, split into blocks of MAX_INPUT_SPLIT_SIZE
-    bytes and write block to output_dir. Input files will never be combined.
+    The input_path can be a file or a directory of files.  If a file is smaller
+    than MAX_INPUT_SPLIT_SIZE, then copy it to output_dir.  For larger files,
+    split into blocks of MAX_INPUT_SPLIT_SIZE bytes and write block to
+    output_dir. Input files will never be combined.
 
     The number of files created will be the number of mappers since we will
     assume that the number of tasks per mapper is 1.  Apache Hadoop has a
@@ -111,12 +112,9 @@ def prepare_input_files(input_dir, output_dir):
     because our use case has smaller inputs we use 1.
 
     """
-    assert input_dir.is_dir(), f"Can't find input_dir '{input_dir}'"
-
-    # Split and copy input files
     part_num = 0
     total_size = 0
-    for inpath in sorted(input_dir.glob('*')):
+    for inpath in normalize_input_paths(input_path):
         assert inpath.is_file()
 
         # Compute output filenames
@@ -146,6 +144,26 @@ def prepare_input_files(input_dir, output_dir):
             for i, line in enumerate(infile):
                 outfiles[i % n_splits].write(line)
     LOGGER.debug("total input size=%sB", total_size)
+
+
+def normalize_input_paths(input_path):
+    """Return a list of filtered input files.
+
+    If input_path is a file, then use it.  If input_path is a directory, then
+    grab all the *files* inside.  Ignore subdirectories.
+
+    """
+    input_paths = []
+    if input_path.is_dir():
+        for path in sorted(input_path.glob('*')):
+            if path.is_file():
+                input_paths.append(path)
+            else:
+                LOGGER.warning("Ignoring non-file: %s", path)
+    elif input_path.is_file():
+        input_paths.append(input_path)
+    assert input_paths, f"No input: {input_path}"
+    return input_paths
 
 
 def is_executable(exe):
@@ -222,14 +240,19 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
+def partition_keys(
+        inpath,
+        outpaths,
+        input_keys_stats,
+        output_keys_stats,
+        num_reducers):
     """Allocate lines of inpath among outpaths using hash of key.
 
     Update the data structures provided by the caller input_keys_stats and
     output_keys_stats.  Both map a filename to a set of of keys.
 
     """
-    assert len(outpaths) == MAX_NUM_REDUCE
+    assert len(outpaths) == num_reducers
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
     with contextlib.ExitStack() as stack:
@@ -237,13 +260,13 @@ def partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats):
         for line in stack.enter_context(inpath.open()):
             key = line.partition('\t')[0]
             input_keys_stats[inpath].add(key)
-            reducer_idx = keyhash(key) % MAX_NUM_REDUCE
+            reducer_idx = keyhash(key) % num_reducers
             outfiles[reducer_idx].write(line)
             outpath = outpaths[reducer_idx]
             output_keys_stats[outpath].add(key)
 
 
-def group_stage(input_dir, output_dir):
+def group_stage(input_dir, output_dir, num_reducers):
     """Run group stage.
 
     Process each mapper output file, allocating lines to grouper output files
@@ -251,8 +274,9 @@ def group_stage(input_dir, output_dir):
 
     """
     # Compute output filenames
+    LOGGER.debug("%s reducers", num_reducers)
     outpaths = []
-    for i in range(MAX_NUM_REDUCE):
+    for i in range(num_reducers):
         outpaths.append(output_dir/part_filename(i))
 
     # Track keyspace stats, map filename -> set of keys
@@ -261,7 +285,8 @@ def group_stage(input_dir, output_dir):
 
     # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths, input_keys_stats, output_keys_stats)
+        partition_keys(inpath, outpaths, input_keys_stats,
+                       output_keys_stats, num_reducers)
 
     # Log input keyspace stats
     all_input_keys = set()

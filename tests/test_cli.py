@@ -49,6 +49,27 @@ def test_simple(tmpdir):
     )
 
 
+def test_2_reducers(tmpdir):
+    """Run a simple MapReduce job with 2 reducers."""
+    with tmpdir.as_cwd():
+        subprocess.run(
+            [
+                "madoop",
+                "-input", TESTDATA_DIR/"word_count/input",
+                "-output", "output",
+                "-mapper", TESTDATA_DIR/"word_count/map.py",
+                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+                "-numReduceTasks", "2",
+            ],
+            stdout=subprocess.PIPE,
+            check=True,
+        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output-2-reducers",
+        tmpdir/"output",
+    )
+
+
 def test_verbose(tmpdir):
     """Run a simple MapReduce job and verify the verbose stdout."""
     with tmpdir.as_cwd():
