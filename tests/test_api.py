@@ -13,9 +13,26 @@ def test_simple(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
+
+
+def test_2_reducers(tmpdir):
+    """Run a simple MapReduce job with 2 reducers."""
+    with tmpdir.as_cwd():
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count/input",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=2
+        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output-2-reducers",
         tmpdir/"output",
     )
 
@@ -28,6 +45,7 @@ def test_bash_executable(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.sh",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.sh",
+            num_reducers=4
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
@@ -43,6 +61,7 @@ def test_bad_map_exe(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map_invalid.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4
         )
 
 
@@ -54,6 +73,7 @@ def test_missing_shebang(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce_invalid.py",
+            num_reducers=4
         )
 
 
@@ -65,6 +85,7 @@ def test_empty_inputs(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
@@ -80,6 +101,7 @@ def test_single_input_file(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
@@ -97,6 +119,7 @@ def test_ignores_subdirs(tmpdir):
             output_dir="output",
             map_exe=TESTDATA_DIR/"word_count/map.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4
         )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/output",
