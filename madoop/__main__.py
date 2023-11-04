@@ -60,7 +60,7 @@ def main():
     # Run MapReduce API
     try:
         mapreduce(
-            input_dir=args.input,
+            input_path=args.input,
             output_dir=args.output,
             map_exe=args.mapper,
             reduce_exe=args.reducer,
