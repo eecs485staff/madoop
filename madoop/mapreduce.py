@@ -85,7 +85,7 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
         for filename in sorted(reduce_output_dir.glob("*")):
             st_size = filename.stat().st_size
             total_size += st_size
-            shutil.copy(filename, output_dir)
+            shutil.move(filename, output_dir)
             output_path = output_dir.parent/last_two(filename)
             LOGGER.debug("%s size=%sB", output_path, st_size)
 
