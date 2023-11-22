@@ -11,6 +11,8 @@ import pathlib
 import shutil
 import subprocess
 import tempfile
+import multiprocessing
+import concurrent.futures
 from .exceptions import MadoopError
 
 
@@ -179,31 +181,47 @@ def part_filename(num):
     return f"part-{num:05d}"
 
 
+def map_single_chunk(exe, input_path, output_path, chunk):
+    """Execute mapper on a single chunk."""
+    with output_path.open("w") as outfile:
+        try:
+            subprocess.run(
+                str(exe),
+                shell=True,
+                check=True,
+                input=chunk,
+                stdout=outfile,
+            )
+        except subprocess.CalledProcessError as err:
+            raise MadoopError(
+                f"Command returned non-zero: "
+                f"{exe} < {input_path} > {output_path}"
+            ) from err
+
+
 def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
-    part_num = 1
-    for input_path in normalize_input_paths(input_dir):
-        for chunk in split_file(input_path, MAX_INPUT_SPLIT_SIZE):
-            output_path = output_dir/part_filename(part_num)
-            LOGGER.debug(
-                "%s < %s > %s",
-                exe.name, last_two(input_path), last_two(output_path),
-            )
-            with output_path.open("w") as outfile:
-                try:
-                    subprocess.run(
-                        str(exe),
-                        shell=True,
-                        check=True,
-                        input=chunk,
-                        stdout=outfile,
-                    )
-                except subprocess.CalledProcessError as err:
-                    raise MadoopError(
-                        f"Command returned non-zero: "
-                        f"{exe} < {input_path} > {output_path}"
-                    ) from err
-            part_num += 1
+    part_num = 0
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=multiprocessing.cpu_count()
+    ) as pool:
+        for input_path in normalize_input_paths(input_dir):
+            for chunk in split_file(input_path, MAX_INPUT_SPLIT_SIZE):
+                output_path = output_dir/part_filename(part_num)
+                LOGGER.debug(
+                    "%s < %s > %s",
+                    exe.name, last_two(input_path), last_two(output_path),
+                )
+                futures.append(pool.submit(
+                    map_single_chunk,
+                    exe,
+                    input_path,
+                    output_path,
+                    chunk,
+                ))
+                part_num += 1
+    concurrent.futures.wait(futures)
     LOGGER.info("Finished map executions: %s", part_num)
 
 
@@ -294,8 +312,8 @@ def group_stage(input_dir, output_dir, num_reducers):
             path.unlink()
 
     # Sort output files
-    for path in sorted(output_dir.iterdir()):
-        sort_file(path)
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        pool.map(sort_file, sorted(output_dir.iterdir()))
 
     # Log output keyspace stats
     all_output_keys = set()
@@ -306,29 +324,44 @@ def group_stage(input_dir, output_dir, num_reducers):
                  len(all_output_keys))
 
 
+def reduce_single_file(exe, input_path, output_path):
+    """Execute reducer on a single file."""
+    with input_path.open() as infile, output_path.open("w") as outfile:
+        try:
+            subprocess.run(
+                str(exe),
+                shell=True,
+                check=True,
+                stdin=infile,
+                stdout=outfile,
+            )
+        except subprocess.CalledProcessError as err:
+            raise MadoopError(
+                f"Command returned non-zero: "
+                f"{exe} < {input_path} > {output_path}"
+            ) from err
+
+
 def reduce_stage(exe, input_dir, output_dir):
     """Execute reducers."""
     i = 0
-    for i, input_path in enumerate(sorted(input_dir.iterdir())):
-        output_path = output_dir/part_filename(i)
-        LOGGER.debug(
-            "%s < %s > %s",
-            exe.name, last_two(input_path), last_two(output_path),
-        )
-        with input_path.open() as infile, output_path.open('w') as outfile:
-            try:
-                subprocess.run(
-                    str(exe),
-                    shell=True,
-                    check=True,
-                    stdin=infile,
-                    stdout=outfile,
-                )
-            except subprocess.CalledProcessError as err:
-                raise MadoopError(
-                    f"Command returned non-zero: "
-                    f"{exe} < {input_path} > {output_path}"
-                ) from err
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=multiprocessing.cpu_count()
+    ) as pool:
+        for i, input_path in enumerate(sorted(input_dir.iterdir())):
+            output_path = output_dir/part_filename(i)
+            LOGGER.debug(
+                "%s < %s > %s",
+                exe.name, last_two(input_path), last_two(output_path),
+            )
+            futures.append(pool.submit(
+                reduce_single_file,
+                exe,
+                input_path,
+                output_path,
+            ))
+    concurrent.futures.wait(futures)
     LOGGER.info("Finished reduce executions: %s", i+1)
 
 
