@@ -221,7 +221,10 @@ def map_stage(exe, input_dir, output_dir):
                     chunk,
                 ))
                 part_num += 1
-    concurrent.futures.wait(futures)
+    for future in concurrent.futures.as_completed(futures):
+        exception = future.exception()
+        if exception:
+            raise exception
     LOGGER.info("Finished map executions: %s", part_num)
 
 
@@ -369,7 +372,10 @@ def reduce_stage(exe, input_dir, output_dir):
                 input_path,
                 output_path,
             ))
-    concurrent.futures.wait(futures)
+    for future in concurrent.futures.as_completed(futures):
+        exception = future.exception()
+        if exception:
+            raise exception
     LOGGER.info("Finished reduce executions: %s", i+1)
 
 
