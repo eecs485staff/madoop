@@ -7,7 +7,6 @@ import contextlib
 import collections
 import hashlib
 import logging
-import math
 import pathlib
 import shutil
 import subprocess
@@ -43,18 +42,15 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
         LOGGER.debug("tmpdir=%s", tmpdir)
 
         # Create stage input and output directory
-        map_input_dir = tmpdir/'input'
         map_output_dir = tmpdir/'mapper-output'
         reduce_input_dir = tmpdir/'reducer-input'
         reduce_output_dir = tmpdir/'output'
-        map_input_dir.mkdir()
         map_output_dir.mkdir()
         reduce_input_dir.mkdir()
         reduce_output_dir.mkdir()
 
         # Copy and rename input files: part-00000, part-00001, etc.
         input_path = pathlib.Path(input_path)
-        prepare_input_files(input_path, map_input_dir)
 
         # Executables must be absolute paths
         map_exe = pathlib.Path(map_exe).resolve()
@@ -64,7 +60,7 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
         LOGGER.info("Starting map stage")
         map_stage(
             exe=map_exe,
-            input_dir=map_input_dir,
+            input_dir=input_path,
             output_dir=map_output_dir,
         )
 
@@ -98,52 +94,36 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
     LOGGER.info("Output directory: %s", output_dir)
 
 
-def prepare_input_files(input_path, output_dir):
-    """Copy and split input files.  Rename to part-00000, part-00001, etc.
+def split_file(input_filename, max_chunksize):
+    """Iterate over the data in a file one chunk at a time."""
+    with open(input_filename, "rb") as input_file:
+        buffer = b""
 
-    The input_path can be a file or a directory of files.  If a file is smaller
-    than MAX_INPUT_SPLIT_SIZE, then copy it to output_dir.  For larger files,
-    split into blocks of MAX_INPUT_SPLIT_SIZE bytes and write block to
-    output_dir. Input files will never be combined.
+        while True:
+            chunk = input_file.read(max_chunksize)
+            # Break if no more data remains.
+            if not chunk:
+                break
 
-    The number of files created will be the number of mappers since we will
-    assume that the number of tasks per mapper is 1.  Apache Hadoop has a
-    configurable number of tasks per mapper, however for both simplicity and
-    because our use case has smaller inputs we use 1.
+            # Add the chunk to the buffer.
+            buffer += chunk
 
-    """
-    part_num = 0
-    total_size = 0
-    for inpath in normalize_input_paths(input_path):
-        assert inpath.is_file()
+            # Find the last newline character in the buffer. We don't want to
+            # yield a chunk that ends in the middle of a line; we have to
+            # respect line boundaries or we'll corrupt the input.
+            last_newline = buffer.rfind(b"\n")
+            if last_newline != -1:
+                # Yield the content up to the last newline, saving the rest
+                # for the next chunk.
+                yield buffer[:last_newline + 1]
 
-        # Compute output filenames
-        st_size = inpath.stat().st_size
-        total_size += st_size
-        n_splits = math.ceil(st_size / MAX_INPUT_SPLIT_SIZE)
-        n_splits = 1 if not n_splits else n_splits  # Handle empty input file
-        LOGGER.debug(
-            "input %s size=%sB partitions=%s", inpath, st_size, n_splits
-        )
-        outpaths = [
-            output_dir/part_filename(part_num + i) for i in range(n_splits)
-        ]
-        part_num += n_splits
+                # Remove unprocessed data from the buffer. The next chunk will
+                # start with whatever data came after the last newline.
+                buffer = buffer[last_newline + 1:]
 
-        # Copy to new output files
-        with contextlib.ExitStack() as stack:
-            outfiles = [stack.enter_context(i.open('w')) for i in outpaths]
-            infile = stack.enter_context(inpath.open(encoding="utf-8"))
-            outparent = outpaths[0].parent
-            assert all(i.parent == outparent for i in outpaths)
-            outnames = [i.name for i in outpaths]
-            logging.debug(
-                "partition %s >> %s/{%s}",
-                last_two(inpath), outparent.name, ",".join(outnames),
-            )
-            for i, line in enumerate(infile):
-                outfiles[i % n_splits].write(line)
-    LOGGER.debug("total input size=%sB", total_size)
+        # Yield any remaining data.
+        if buffer:
+            yield buffer
 
 
 def normalize_input_paths(input_path):
@@ -201,28 +181,30 @@ def part_filename(num):
 
 def map_stage(exe, input_dir, output_dir):
     """Execute mappers."""
-    i = 0
-    for i, input_path in enumerate(sorted(input_dir.iterdir()), 1):
-        output_path = output_dir/part_filename(i)
-        LOGGER.debug(
-            "%s < %s > %s",
-            exe.name, last_two(input_path), last_two(output_path),
-        )
-        with input_path.open() as infile, output_path.open('w') as outfile:
-            try:
-                subprocess.run(
-                    str(exe),
-                    shell=True,
-                    check=True,
-                    stdin=infile,
-                    stdout=outfile,
-                )
-            except subprocess.CalledProcessError as err:
-                raise MadoopError(
-                    f"Command returned non-zero: "
-                    f"{exe} < {input_path} > {output_path}"
-                ) from err
-    LOGGER.info("Finished map executions: %s", i)
+    part_num = 1
+    for input_path in normalize_input_paths(input_dir):
+        for chunk in split_file(input_path, MAX_INPUT_SPLIT_SIZE):
+            output_path = output_dir/part_filename(part_num)
+            LOGGER.debug(
+                "%s < %s > %s",
+                exe.name, last_two(input_path), last_two(output_path),
+            )
+            with output_path.open("w") as outfile:
+                try:
+                    subprocess.run(
+                        str(exe),
+                        shell=True,
+                        check=True,
+                        input=chunk,
+                        stdout=outfile,
+                    )
+                except subprocess.CalledProcessError as err:
+                    raise MadoopError(
+                        f"Command returned non-zero: "
+                        f"{exe} < {input_path} > {output_path}"
+                    ) from err
+            part_num += 1
+    LOGGER.info("Finished map executions: %s", part_num)
 
 
 def sort_file(path):
