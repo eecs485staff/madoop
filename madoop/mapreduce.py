@@ -119,7 +119,7 @@ def split_file(input_filename, max_chunksize):
                 # for the next chunk.
                 yield buffer[:last_newline + 1]
 
-                # Remove unprocessed data from the buffer. The next chunk will
+                # Remove processed data from the buffer. The next chunk will
                 # start with whatever data came after the last newline.
                 buffer = buffer[last_newline + 1:]
 
