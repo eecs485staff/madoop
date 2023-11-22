@@ -1,6 +1,9 @@
 """System tests for the API interface."""
+from pathlib import Path
 import pytest
 import madoop
+from madoop.exceptions import MadoopError
+from madoop.mapreduce import map_stage, reduce_stage
 from . import utils
 from .utils import TESTDATA_DIR
 
@@ -53,6 +56,18 @@ def test_bash_executable(tmpdir):
     )
 
 
+def test_output_already_exists(tmpdir):
+    """Output already existing should raise an error."""
+    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count/input",
+            output_dir=tmpdir,
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=2,
+        )
+
+
 def test_bad_map_exe(tmpdir):
     """Map exe returns non-zero should produce an error message."""
     with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
@@ -62,6 +77,23 @@ def test_bad_map_exe(tmpdir):
             map_exe=TESTDATA_DIR/"word_count/map_invalid.py",
             reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
             num_reducers=4
+        )
+
+    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
+        map_stage(
+            exe=TESTDATA_DIR/"word_count/map_invalid.py",
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir=Path(tmpdir),
+        )
+
+
+def test_bad_reduce_exe(tmpdir):
+    """Reduce exe returns non-zero should produce an error message."""
+    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError):
+        reduce_stage(
+            exe=TESTDATA_DIR/"word_count/reduce_exit_1.py",
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir=Path(tmpdir),
         )
 
 
