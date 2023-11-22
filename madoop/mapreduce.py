@@ -266,6 +266,25 @@ def partition_keys(
             output_keys_stats[outpath].add(key)
 
 
+def log_input_key_stats(input_keys_stats, input_dir):
+    """Log input key stats."""
+    all_input_keys = set()
+    for inpath, keys in sorted(input_keys_stats.items()):
+        all_input_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_input_keys))
+
+
+def log_output_key_stats(output_keys_stats, output_dir):
+    """Log output keyspace stats."""
+    all_output_keys = set()
+    for outpath, keys in sorted(output_keys_stats.items()):
+        all_output_keys.update(keys)
+        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name,
+                 len(all_output_keys))
+
+
 def group_stage(input_dir, output_dir, num_reducers):
     """Run group stage.
 
@@ -288,12 +307,7 @@ def group_stage(input_dir, output_dir, num_reducers):
         partition_keys(inpath, outpaths, input_keys_stats,
                        output_keys_stats, num_reducers)
 
-    # Log input keyspace stats
-    all_input_keys = set()
-    for inpath, keys in sorted(input_keys_stats.items()):
-        all_input_keys.update(keys)
-        LOGGER.debug("%s unique_keys=%s", last_two(inpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", input_dir.name, len(all_input_keys))
+    log_input_key_stats(input_keys_stats, input_dir)
 
     # Log partition input and output filenames
     outnames = [i.name for i in outpaths]
@@ -315,13 +329,7 @@ def group_stage(input_dir, output_dir, num_reducers):
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         pool.map(sort_file, sorted(output_dir.iterdir()))
 
-    # Log output keyspace stats
-    all_output_keys = set()
-    for outpath, keys in sorted(output_keys_stats.items()):
-        all_output_keys.update(keys)
-        LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", output_dir.name,
-                 len(all_output_keys))
+    log_output_key_stats(output_keys_stats, output_dir)
 
 
 def reduce_single_file(exe, input_path, output_path):
