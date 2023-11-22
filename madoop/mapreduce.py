@@ -17,7 +17,7 @@ from .exceptions import MadoopError
 
 
 # Large input files are automatically split
-MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
+MAX_INPUT_SPLIT_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # The number of reducers is dynamically determined by the number of unique keys
 # but will not be more than num_reducers
