@@ -2,7 +2,6 @@
 from pathlib import Path
 import pytest
 import madoop
-from madoop.exceptions import MadoopError
 from madoop.mapreduce import map_stage, reduce_stage
 from . import utils
 from .utils import TESTDATA_DIR
