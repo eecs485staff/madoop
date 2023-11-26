@@ -38,6 +38,11 @@ def main():
         '-numReduceTasks', dest='num_reducers', default=4,
         help="max number of reducers"
     )
+    optional_args.add_argument(
+        '-partitioner', dest='partitioner', default=None,
+        help=("executable that computes a partition for each key-value pair of"
+              "map output: default is hash(key) %% num_reducers"),
+    )
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-input', dest='input', required=True)
     required_args.add_argument('-output', dest='output', required=True)
@@ -64,7 +69,8 @@ def main():
             output_dir=args.output,
             map_exe=args.mapper,
             reduce_exe=args.reducer,
-            num_reducers=int(args.num_reducers)
+            num_reducers=int(args.num_reducers),
+            partitioner=args.partitioner,
         )
     except MadoopError as err:
         sys.exit(f"Error: {err}")
