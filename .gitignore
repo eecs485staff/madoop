@@ -24,6 +24,8 @@ build/
 /.tox/
 /.coverage*
 *,cover
+# Make an exception for .coveragerc, which should be checked into version control.
+!.coveragerc
 
 # Text editors and IDEs
 *~

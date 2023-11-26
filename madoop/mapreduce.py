@@ -329,8 +329,16 @@ def group_stage(input_dir, output_dir, num_reducers):
             path.unlink()
 
     # Sort output files
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+    try:
+        # Don't use a with statement here, because Coverage won't be able to
+        # detect code running in a subprocess if we do.
+        # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html
+        # pylint: disable=consider-using-with
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
         pool.map(sort_file, sorted(output_dir.iterdir()))
+    finally:
+        pool.close()
+        pool.join()
 
     log_output_key_stats(output_keys_stats, output_dir)
 
