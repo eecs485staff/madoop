@@ -9,6 +9,7 @@ graft madoop/example
 
 # Avoid dev and and binary files
 exclude tox.ini
+exclude .coveragerc
 exclude .editorconfig
 global-exclude *.pyc
 global-exclude __pycache__
