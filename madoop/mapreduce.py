@@ -178,13 +178,13 @@ def is_executable(exe):
     try:
         subprocess.run(
             str(exe),
-            shell=True,
+            shell=False,
             input="".encode(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
         )
-    except subprocess.CalledProcessError as err:
+    except (subprocess.CalledProcessError, OSError) as err:
         raise MadoopError(f"Failed executable test: {err}") from err
 
 
@@ -212,7 +212,7 @@ def map_stage(exe, input_dir, output_dir):
             try:
                 subprocess.run(
                     str(exe),
-                    shell=True,
+                    shell=False,
                     check=True,
                     stdin=infile,
                     stdout=outfile,
@@ -337,7 +337,7 @@ def reduce_stage(exe, input_dir, output_dir):
             try:
                 subprocess.run(
                     str(exe),
-                    shell=True,
+                    shell=False,
                     check=True,
                     stdin=infile,
                     stdout=outfile,
