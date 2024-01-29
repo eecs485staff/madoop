@@ -25,7 +25,6 @@ madoop = "madoop.__main__:main"
 
 [project.optional-dependencies]
 dev = [
-    "pdbpp",
     "build",
     "twine",
     "tox",
