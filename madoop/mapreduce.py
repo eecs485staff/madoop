@@ -184,7 +184,7 @@ def is_executable(exe):
             stderr=subprocess.PIPE,
             check=True,
         )
-    except subprocess.CalledProcessError as err:
+    except (subprocess.CalledProcessError, OSError) as err:
         raise MadoopError(f"Failed executable test: {err}") from err
 
 
