@@ -40,7 +40,7 @@ def main():
     )
     optional_args.add_argument(
         '-partitioner', dest='partitioner', default=None,
-        help=("executable that computes a partition for each key-value pair of"
+        help=("executable that computes a partition for each key-value pair of "
               "map output: default is hash(key) %% num_reducers"),
     )
     required_args = parser.add_argument_group('required arguments')
