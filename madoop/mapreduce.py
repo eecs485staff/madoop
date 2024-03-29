@@ -16,7 +16,7 @@ from .exceptions import MadoopError
 
 
 # Large input files are automatically split
-MAX_INPUT_SPLIT_SIZE = 2**20  # 1 MB
+MAX_INPUT_SPLIT_SIZE = 2**21  # 2 MB
 
 # The number of reducers is dynamically determined by the number of unique keys
 # but will not be more than num_reducers
@@ -187,13 +187,13 @@ def is_executable(exe):
     try:
         subprocess.run(
             str(exe),
-            shell=True,
+            shell=False,
             input="".encode(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
         )
-    except subprocess.CalledProcessError as err:
+    except (subprocess.CalledProcessError, OSError) as err:
         raise MadoopError(f"Failed executable test: {err}") from err
 
 
@@ -221,7 +221,7 @@ def map_stage(exe, input_dir, output_dir):
             try:
                 subprocess.run(
                     str(exe),
-                    shell=True,
+                    shell=False,
                     check=True,
                     stdin=infile,
                     stdout=outfile,
@@ -406,7 +406,7 @@ def reduce_stage(exe, input_dir, output_dir):
             try:
                 subprocess.run(
                     str(exe),
-                    shell=True,
+                    shell=False,
                     check=True,
                     stdin=infile,
                     stdout=outfile,

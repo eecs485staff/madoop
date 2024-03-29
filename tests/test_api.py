@@ -159,3 +159,21 @@ def test_ignores_subdirs(tmpdir):
         TESTDATA_DIR/"word_count/correct/output",
         tmpdir/"output",
     )
+
+
+def test_input_path_spaces(tmpdir):
+    """Run a simple MapReduce job with an input directory containing a
+    subdirectory. The subdirectory should be gracefully ignored.
+    """
+    with tmpdir.as_cwd():
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count SPACE/input SPACE",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count SPACE/map SPACE.py",
+            reduce_exe=TESTDATA_DIR/"word_count SPACE/reduce SPACE.py",
+            num_reducers=4
+        )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/output",
+        tmpdir/"output",
+    )
