@@ -31,7 +31,7 @@ def mapreduce(
     map_exe,
     reduce_exe,
     num_reducers,
-    partitioner,
+    partitioner=None,
 ):
     """Madoop API."""
     # pylint: disable=too-many-arguments
