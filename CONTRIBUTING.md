@@ -44,7 +44,7 @@ $ tox -e py3
 Update your local `develop` branch.  Make sure it's clean.
 ```console
 $ git fetch
-$ git checkout develop
+$ git switch develop
 $ git rebase
 $ git status
 ```
@@ -56,15 +56,15 @@ $ tox -e py3
 
 Update version
 ```console
-$ $EDITOR setup.py
-$ git commit -m "version bump" setup.py
+$ $EDITOR pyproject.toml
+$ git commit -m "version bump" pyproject.toml
 $ git push origin develop
 ```
 
 Update main branch
 ```console
 $ git fetch
-$ git checkout main
+$ git switch main
 $ git rebase
 $ git merge --no-ff origin/develop
 ```
@@ -72,8 +72,8 @@ $ git merge --no-ff origin/develop
 Tag a release
 ```console
 $ git tag -a X.Y.Z
-$ grep version= setup.py
-    version="X.Y.Z",
+$ grep version pyproject.toml
+version = "X.Y.Z"
 $ git describe
 X.Y.Z
 $ git push --tags origin main
