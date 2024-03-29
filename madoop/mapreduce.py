@@ -308,8 +308,13 @@ def partition_keys_custom(
             except ValueError as err:
                 raise MadoopError(
                      "Partition executable returned non-integer value: "
-                     f"{partition}."
+                     f"{partition} for line '{line}'."
                 ) from err
+            if not 0 <= partition < num_reducers:
+                raise MadoopError(
+                     "Partition executable returned invalid value: "
+                     f"0 <= {partition} < {num_reducers} for line '{line}'."
+                )
             key = line.partition('\t')[0]
             input_keys_stats[inpath].add(key)
             outfiles[partition].write(line)
