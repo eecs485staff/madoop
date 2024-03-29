@@ -4,12 +4,12 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 """
 import argparse
+import importlib.metadata
 import logging
 import pathlib
 import shutil
 import sys
 import textwrap
-import pkg_resources
 from .mapreduce import mapreduce
 from .exceptions import MadoopError
 
@@ -21,10 +21,10 @@ def main():
     )
 
     optional_args = parser.add_argument_group('optional arguments')
-    version = pkg_resources.get_distribution("madoop").version
+
     optional_args.add_argument(
         '--version', action='version',
-        version=f'Madoop {version}'
+        version=f'Madoop {importlib.metadata.version("madoop")}'
     )
     optional_args.add_argument(
         '--example', action=ExampleAction, nargs=0,
