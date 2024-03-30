@@ -286,6 +286,38 @@ if __name__ == "__main__":
     main()
 ```
 
+## Custom partitioner
+If you need to specify which key-value pairs are sent to which reducers, you can create a custom partitioner. Here's a sample which works with our word count example.
+```python
+#!/usr/bin/env -S python3 -u
+"""Word count partitioner."""
+import sys
+
+
+num_reducers = int(sys.argv[1])
+
+
+for line in sys.stdin:
+    key, value = line.split("\t")
+    if key[0] <= "G":
+        print(0 % num_reducers)
+    else:
+        print(1 % num_reducers)
+```
+
+Each line of output from the mappers is streamed to this partition file, and the number of reducers is set to `sys.argv[1]`. For each line, the partitioner checks whether the first letter of the key is less than or greater than "G". If it's less than "G", the line is sent to the first reducer, and if it's greater, the line is sent to the second reducer. 
+
+Use the `-partitioner` command-line argument to tell Madoop to use this partitioner.
+
+```console
+$ madoop \
+  -input example/input \
+  -output example/output \
+  -mapper example/map.py \
+  -reducer example/reduce.py \
+  -partitioner example/partition.py
+```
+
 ## Tips and tricks
 These are some pro-tips for working with MapReduce programs written in Python for the Hadoop Streaming interface.
 
