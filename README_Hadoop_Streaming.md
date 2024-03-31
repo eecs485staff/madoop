@@ -318,7 +318,7 @@ $ madoop \
   -partitioner example/partition.py
 ```
 
-This feature works similarly to Hadoop's [`Partitioner` class](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/mapreduce/Partitioner.html). The main difference is that Hadoop only allows partitioners to be a Java class, while Madoop allows any executable that reads from `stdin` and writes to `stdout`.
+This feature is similar to Hadoop's [`Partitioner` class](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/mapreduce/Partitioner.html), although it is not directly compatible with Hadoop. The main difference is that Hadoop only allows partitioners to be a Java class, while Madoop allows any executable that reads from `stdin` and writes to `stdout`.
 
 ## Tips and tricks
 These are some pro-tips for working with MapReduce programs written in Python for the Hadoop Streaming interface.
