@@ -24,6 +24,7 @@ LOGGER = logging.getLogger("madoop")
 
 
 def mapreduce(
+    *,
     input_path,
     output_dir,
     map_exe,
@@ -292,7 +293,9 @@ def partition_keys_custom(
     Update the data structures provided by the caller input_keys_stats and
     output_keys_stats.  Both map a filename to a set of of keys.
     """
-    # pylint: disable=too-many-arguments,too-many-locals
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-locals
     assert len(outpaths) == num_reducers
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
