@@ -32,12 +32,7 @@ def mapreduce(
     num_reducers,
     partitioner=None,
 ):
-    """Madoop API.
-
-    The number of reducers is dynamically determined by the number of unique
-    keys but will not be more than num_reducers
-
-    """
+    """Madoop API."""
     # pylint: disable=too-many-arguments
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
