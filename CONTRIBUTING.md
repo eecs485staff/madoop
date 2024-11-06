@@ -6,7 +6,7 @@ Set up a development virtual environment.
 ```console
 $ python3 -m venv .venv
 $ source .venv/bin/activate
-$ pip install --editable .[dev,test]
+$ pip install --editable .[dev]
 ```
 
 A `madoop` entry point script is installed in your virtual environment.
