@@ -194,7 +194,7 @@ def map_single_chunk(exe, input_path, output_path, chunk):
         try:
             subprocess.run(
                 str(exe),
-                shell=True,
+                shell=False,
                 check=True,
                 input=chunk,
                 stdout=outfile,
@@ -415,7 +415,7 @@ def reduce_single_file(exe, input_path, output_path):
         try:
             subprocess.run(
                 str(exe),
-                shell=True,
+                shell=False,
                 check=True,
                 stdin=infile,
                 stdout=outfile,
