@@ -31,6 +31,7 @@ def test_group_stage(tmpdir):
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=Path(tmpdir),
         num_reducers=4,
+        partitioner=None,
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/grouper-output",
@@ -44,9 +45,24 @@ def test_group_stage_2_reducers(tmpdir):
         input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
         output_dir=Path(tmpdir),
         num_reducers=2,
+        partitioner=None,
     )
     utils.assert_dirs_eq(
         TESTDATA_DIR/"word_count/correct/grouper-output-2-reducers",
+        tmpdir,
+    )
+
+
+def test_group_stage_custom_partitioner(tmpdir):
+    """Test group stage using word count example with custom partitioner."""
+    group_stage(
+        input_dir=TESTDATA_DIR/"word_count/correct/mapper-output",
+        output_dir=Path(tmpdir),
+        num_reducers=2,
+        partitioner=TESTDATA_DIR/"word_count/partition.py",
+    )
+    utils.assert_dirs_eq(
+        TESTDATA_DIR/"word_count/correct/grouper-output-custom-partitioner",
         tmpdir,
     )
 

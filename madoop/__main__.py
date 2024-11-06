@@ -4,12 +4,12 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 """
 import argparse
+import importlib.metadata
 import logging
 import pathlib
 import shutil
 import sys
 import textwrap
-import pkg_resources
 from .mapreduce import mapreduce
 from .exceptions import MadoopError
 
@@ -21,10 +21,10 @@ def main():
     )
 
     optional_args = parser.add_argument_group('optional arguments')
-    version = pkg_resources.get_distribution("madoop").version
+
     optional_args.add_argument(
         '--version', action='version',
-        version=f'Madoop {version}'
+        version=f'Madoop {importlib.metadata.version("madoop")}'
     )
     optional_args.add_argument(
         '--example', action=ExampleAction, nargs=0,
@@ -37,6 +37,11 @@ def main():
     optional_args.add_argument(
         '-numReduceTasks', dest='num_reducers', default=4,
         help="max number of reducers"
+    )
+    optional_args.add_argument(
+        '-partitioner', dest='partitioner', default=None,
+        help=("executable that computes a partition for each key-value pair "
+              "of map output: default is hash(key) %% num_reducers"),
     )
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-input', dest='input', required=True)
@@ -64,7 +69,8 @@ def main():
             output_dir=args.output,
             map_exe=args.mapper,
             reduce_exe=args.reducer,
-            num_reducers=int(args.num_reducers)
+            num_reducers=int(args.num_reducers),
+            partitioner=args.partitioner,
         )
     except MadoopError as err:
         sys.exit(f"Error: {err}")

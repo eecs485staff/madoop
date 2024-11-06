@@ -19,15 +19,25 @@ from .exceptions import MadoopError
 # Large input files are automatically split
 MAX_INPUT_SPLIT_SIZE = 10 * 1024 * 1024  # 10 MB
 
-# The number of reducers is dynamically determined by the number of unique keys
-# but will not be more than num_reducers
-
 # Madoop logger
 LOGGER = logging.getLogger("madoop")
 
 
-def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
-    """Madoop API."""
+def mapreduce(
+    input_path,
+    output_dir,
+    map_exe,
+    reduce_exe,
+    num_reducers,
+    partitioner=None,
+):
+    """Madoop API.
+
+    The number of reducers is dynamically determined by the number of unique
+    keys but will not be more than num_reducers
+
+    """
+    # pylint: disable=too-many-arguments
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
     if output_dir.exists():
@@ -71,7 +81,8 @@ def mapreduce(input_path, output_dir, map_exe, reduce_exe, num_reducers):
         group_stage(
             input_dir=map_output_dir,
             output_dir=reduce_input_dir,
-            num_reducers=num_reducers
+            num_reducers=num_reducers,
+            partitioner=partitioner,
         )
 
         # Run the reducing stage
@@ -160,13 +171,13 @@ def is_executable(exe):
     try:
         subprocess.run(
             str(exe),
-            shell=True,
+            shell=False,
             input="".encode(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
         )
-    except subprocess.CalledProcessError as err:
+    except (subprocess.CalledProcessError, OSError) as err:
         raise MadoopError(f"Failed executable test: {err}") from err
 
 
@@ -243,7 +254,7 @@ def keyhash(key):
     return int(hexdigest, base=16)
 
 
-def partition_keys(
+def partition_keys_default(
         inpath,
         outpaths,
         input_keys_stats,
@@ -253,7 +264,6 @@ def partition_keys(
 
     Update the data structures provided by the caller input_keys_stats and
     output_keys_stats.  Both map a filename to a set of of keys.
-
     """
     assert len(outpaths) == num_reducers
     outparent = outpaths[0].parent
@@ -267,6 +277,60 @@ def partition_keys(
             outfiles[reducer_idx].write(line)
             outpath = outpaths[reducer_idx]
             output_keys_stats[outpath].add(key)
+
+
+def partition_keys_custom(
+    inpath,
+    outpaths,
+    input_keys_stats,
+    output_keys_stats,
+    num_reducers,
+    partitioner,
+):
+    """Allocate lines of inpath among outpaths using a custom partitioner.
+
+    Update the data structures provided by the caller input_keys_stats and
+    output_keys_stats.  Both map a filename to a set of of keys.
+    """
+    # pylint: disable=too-many-arguments,too-many-locals
+    assert len(outpaths) == num_reducers
+    outparent = outpaths[0].parent
+    assert all(i.parent == outparent for i in outpaths)
+    with contextlib.ExitStack() as stack:
+        outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
+        process = stack.enter_context(subprocess.Popen(
+            [partitioner, str(num_reducers)],
+            stdin=stack.enter_context(inpath.open()),
+            stdout=subprocess.PIPE,
+            text=True,
+        ))
+        for line, partition in zip(
+            stack.enter_context(inpath.open()),
+            stack.enter_context(process.stdout)
+        ):
+            try:
+                partition = int(partition)
+            except ValueError as err:
+                raise MadoopError(
+                     "Partition executable returned non-integer value: "
+                     f"{partition} for line '{line}'."
+                ) from err
+            if not 0 <= partition < num_reducers:
+                raise MadoopError(
+                     "Partition executable returned invalid value: "
+                     f"0 <= {partition} < {num_reducers} for line '{line}'."
+                )
+            key = line.partition('\t')[0]
+            input_keys_stats[inpath].add(key)
+            outfiles[partition].write(line)
+            outpath = outpaths[partition]
+            output_keys_stats[outpath].add(key)
+
+        return_code = process.wait()
+        if return_code:
+            raise MadoopError(
+                f"Partition executable returned non-zero: {str(partitioner)}"
+            )
 
 
 def log_input_key_stats(input_keys_stats, input_dir):
@@ -288,7 +352,7 @@ def log_output_key_stats(output_keys_stats, output_dir):
                  len(all_output_keys))
 
 
-def group_stage(input_dir, output_dir, num_reducers):
+def group_stage(input_dir, output_dir, num_reducers, partitioner):
     """Run group stage.
 
     Process each mapper output file, allocating lines to grouper output files
@@ -307,8 +371,12 @@ def group_stage(input_dir, output_dir, num_reducers):
 
     # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
-        partition_keys(inpath, outpaths, input_keys_stats,
-                       output_keys_stats, num_reducers)
+        if not partitioner:
+            partition_keys_default(inpath, outpaths, input_keys_stats,
+                                   output_keys_stats, num_reducers)
+        else:
+            partition_keys_custom(inpath, outpaths, input_keys_stats,
+                                  output_keys_stats, num_reducers, partitioner)
 
     log_input_key_stats(input_keys_stats, input_dir)
 
