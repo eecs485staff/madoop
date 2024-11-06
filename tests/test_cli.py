@@ -1,6 +1,6 @@
 """System tests for the command line interface."""
 import subprocess
-import pkg_resources
+import importlib.metadata
 import pytest
 from . import utils
 from .utils import TESTDATA_DIR
@@ -15,7 +15,7 @@ def test_version():
     )
     output = result.stdout.decode("utf-8")
     assert "Madoop" in output
-    assert pkg_resources.get_distribution("madoop").version in output
+    assert importlib.metadata.version("madoop") in output
 
 
 def test_help():
