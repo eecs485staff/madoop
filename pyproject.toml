@@ -26,15 +26,14 @@ madoop = "madoop.__main__:main"
 [project.optional-dependencies]
 dev = [
     "build",
-    "twine",
-    "tox",
     "check-manifest",
-    "freezegun",
     "pycodestyle",
     "pydocstyle",
     "pylint",
     "pytest",
     "pytest-cov",
+    "tox",
+    "twine",
 ]
 
 [tool.setuptools.packages.find]
