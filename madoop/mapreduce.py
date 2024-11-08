@@ -199,7 +199,7 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 input=chunk,
                 stdout=outfile,
             )
-        except subprocess.CalledProcessError as err:
+        except (subprocess.CalledProcessError, OSError) as err:
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}"
@@ -420,7 +420,7 @@ def reduce_single_file(exe, input_path, output_path):
                 stdin=infile,
                 stdout=outfile,
             )
-        except subprocess.CalledProcessError as err:
+        except (subprocess.CalledProcessError, OSError) as err:
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}"
