@@ -174,7 +174,11 @@ def is_executable(exe):
             check=True,
         )
     except (subprocess.CalledProcessError, OSError) as err:
-        raise MadoopError(f"Failed executable test: {err}") from err
+        stderr_output = ""
+        if isinstance(err, subprocess.CalledProcessError) and err.stderr:
+            stderr_output = '\n' + err.stderr.decode()
+        raise MadoopError(f"Failed executable test: {err}"
+                          f"{stderr_output}") from err
 
 
 def part_filename(num):
@@ -198,11 +202,16 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 check=True,
                 input=chunk,
                 stdout=outfile,
+                stderr=subprocess.PIPE
             )
         except (subprocess.CalledProcessError, OSError) as err:
+            stderr_output = ""
+            if isinstance(err, subprocess.CalledProcessError) and err.stderr:
+                stderr_output = '\n' + err.stderr.decode()
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}"
+                f"{stderr_output}"
             ) from err
 
 
@@ -300,6 +309,7 @@ def partition_keys_custom(
             [partitioner, str(num_reducers)],
             stdin=stack.enter_context(inpath.open()),
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         ))
         for line, partition in zip(
@@ -326,8 +336,12 @@ def partition_keys_custom(
 
         return_code = process.wait()
         if return_code:
+            stderr_output = process.stderr.read()
+            if len(stderr_output) != 0:
+                stderr_output = '\n' + stderr_output
             raise MadoopError(
                 f"Partition executable returned non-zero: {str(partitioner)}"
+                f"{stderr_output}"
             )
 
 
@@ -419,11 +433,16 @@ def reduce_single_file(exe, input_path, output_path):
                 check=True,
                 stdin=infile,
                 stdout=outfile,
+                stderr=subprocess.PIPE
             )
         except (subprocess.CalledProcessError, OSError) as err:
+            stderr_output = ""
+            if isinstance(err, subprocess.CalledProcessError) and err.stderr:
+                stderr_output = '\n' + err.stderr.decode()
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}"
+                f"{stderr_output}"
             ) from err
 
 
