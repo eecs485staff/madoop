@@ -214,8 +214,10 @@ def test_map_exe_error_msg(tmpdir):
     """Map exe returns non-zero with stderr output should produce an
     error message and forward the stderr output.
     """
-    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError,
-                                        match="Map error message"):
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Map error message to stderr"
+    ):
         madoop.mapreduce(
             input_path=TESTDATA_DIR/"word_count/input",
             output_dir="output",
@@ -225,8 +227,10 @@ def test_map_exe_error_msg(tmpdir):
             partitioner=None,
         )
 
-    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError,
-                                        match="Map error message"):
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Map error message to stderr"
+    ):
         map_stage(
             exe=TESTDATA_DIR/"word_count/map_error_msg.py",
             input_dir=TESTDATA_DIR/"word_count/input",
@@ -238,8 +242,10 @@ def test_partition_exe_error_msg(tmpdir):
     """Partition exe returns non-zero with stderr output should produce an
     error message and forward the stderr output.
     """
-    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError,
-                                        match="Partition error message"):
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Partition error message to stderr"
+    ):
         madoop.mapreduce(
             input_path=TESTDATA_DIR/"word_count/input",
             output_dir="output",
@@ -254,8 +260,10 @@ def test_reduce_exe_error_msg(tmpdir):
     """Reduce exe returns non-zero with stderr output should produce an
     error message and forward the stderr output.
     """
-    with tmpdir.as_cwd(), pytest.raises(madoop.MadoopError,
-                                        match="Reduce error message"):
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Reduce error message to stderr"
+    ):
         reduce_stage(
             exe=TESTDATA_DIR/"word_count/reduce_error_msg.py",
             input_dir=TESTDATA_DIR/"word_count/input",
