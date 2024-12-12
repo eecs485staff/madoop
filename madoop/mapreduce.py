@@ -213,7 +213,6 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
                 f"{err}\n"
-                f"{err.stdout.decode()}" if err.stdout else ""
                 f"{err.stderr.decode()}" if err.stderr else ""
             ) from err
         except OSError as err:
@@ -342,10 +341,8 @@ def partition_keys_custom(
         return_code = process.wait()
         if return_code:
             stderr_output = process.stderr.read()
-            if len(stderr_output) != 0:
-                stderr_output = '\n' + stderr_output
             raise MadoopError(
-                f"Partition executable returned non-zero: {str(partitioner)}"
+                f"Partition executable returned non-zero: {str(partitioner)}\n"
                 f"{stderr_output}"
             )
 
@@ -445,7 +442,6 @@ def reduce_single_file(exe, input_path, output_path):
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
                 f"{err}\n"
-                f"{err.stdout.decode()}" if err.stdout else ""
                 f"{err.stderr.decode()}" if err.stderr else ""
             ) from err
         except OSError as err:
