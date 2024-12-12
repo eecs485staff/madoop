@@ -173,12 +173,14 @@ def is_executable(exe):
             stderr=subprocess.PIPE,
             check=True,
         )
-    except (subprocess.CalledProcessError, OSError) as err:
-        stderr_output = ""
-        if isinstance(err, subprocess.CalledProcessError) and err.stderr:
-            stderr_output = '\n' + err.stderr.decode()
-        raise MadoopError(f"Failed executable test: {err}"
-                          f"{stderr_output}") from err
+    except subprocess.CalledProcessError as err:
+        raise MadoopError(
+            f"Failed executable test: {err}\n"
+            f"{err.stdout.decode()}" if err.stdout else ""
+            f"{err.stderr.decode()}" if err.stderr else ""
+        ) from err
+    except OSError as err:
+        raise MadoopError(f"Failed executable test: {err}") from err
 
 
 def part_filename(num):
@@ -204,15 +206,16 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 stdout=outfile,
                 stderr=subprocess.PIPE
             )
-        except (subprocess.CalledProcessError, OSError) as err:
-            stderr_output = ""
-            if isinstance(err, subprocess.CalledProcessError) and err.stderr:
-                stderr_output = '\n' + err.stderr.decode()
+        except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
-                f"{exe} < {input_path} > {output_path}"
-                f"{stderr_output}"
+                f"{exe} < {input_path} > {output_path}\n"
+                f"{err}\n"
+                f"{err.stdout.decode()}" if err.stdout else ""
+                f"{err.stderr.decode()}" if err.stderr else ""
             ) from err
+        except OSError as err:
+            raise MadoopError(f"Command returned non-zero: {err}") from err
 
 
 def map_stage(exe, input_dir, output_dir):
@@ -435,15 +438,16 @@ def reduce_single_file(exe, input_path, output_path):
                 stdout=outfile,
                 stderr=subprocess.PIPE
             )
-        except (subprocess.CalledProcessError, OSError) as err:
-            stderr_output = ""
-            if isinstance(err, subprocess.CalledProcessError) and err.stderr:
-                stderr_output = '\n' + err.stderr.decode()
+        except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
-                f"{exe} < {input_path} > {output_path}"
-                f"{stderr_output}"
+                f"{exe} < {input_path} > {output_path}\n"
+                f"{err}\n"
+                f"{err.stdout.decode()}" if err.stdout else ""
+                f"{err.stderr.decode()}" if err.stderr else ""
             ) from err
+        except OSError as err:
+            raise MadoopError(f"Command returned non-zero: {err}") from err
 
 
 def reduce_stage(exe, input_dir, output_dir):
