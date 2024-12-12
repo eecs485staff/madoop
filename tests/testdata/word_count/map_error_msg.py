@@ -3,5 +3,6 @@
 
 import sys
 
-sys.stderr.write("Map error message")
+sys.stdout.write("Map error message to stdout\n")
+sys.stderr.write("Map error message to stderr\n")
 sys.exit(1)

@@ -3,5 +3,6 @@
 
 import sys
 
-sys.stderr.write("Reduce error message")
+sys.stdout.write("Reduce error message to stdout\n")
+sys.stderr.write("Reduce error message to stderr\n")
 sys.exit(1)
