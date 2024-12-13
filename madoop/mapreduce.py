@@ -177,8 +177,8 @@ def is_executable(exe):
         )
     except subprocess.CalledProcessError as err:
         raise MadoopError(
-            f"Failed executable test: {err}\n"
-            f"{err.stdout.decode()}" if err.stdout else ""
+            f"Failed executable test: {err}"
+            f"\n{err.stdout.decode()}" if err.stdout else ""
             f"{err.stderr.decode()}" if err.stderr else ""
         ) from err
     except OSError as err:
@@ -212,8 +212,8 @@ def map_single_chunk(exe, input_path, output_path, chunk):
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
-                f"{err}\n"
-                f"{err.stderr.decode()}" if err.stderr else ""
+                f"{err}"
+                f"\n{err.stderr.decode()}" if err.stderr else ""
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
@@ -441,8 +441,8 @@ def reduce_single_file(exe, input_path, output_path):
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
-                f"{err}\n"
-                f"{err.stderr.decode()}" if err.stderr else ""
+                f"{err}"
+                f"\n{err.stderr.decode()}" if err.stderr else ""
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
