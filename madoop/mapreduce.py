@@ -43,6 +43,8 @@ def mapreduce(
     # Executable scripts must have valid shebangs
     is_executable(map_exe)
     is_executable(reduce_exe)
+    if partitioner:
+        is_executable(partitioner)
 
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
@@ -173,7 +175,13 @@ def is_executable(exe):
             stderr=subprocess.PIPE,
             check=True,
         )
-    except (subprocess.CalledProcessError, OSError) as err:
+    except subprocess.CalledProcessError as err:
+        raise MadoopError(
+            f"Failed executable test: {err}"
+            f"\n{err.stdout.decode()}" if err.stdout else ""
+            f"{err.stderr.decode()}" if err.stderr else ""
+        ) from err
+    except OSError as err:
         raise MadoopError(f"Failed executable test: {err}") from err
 
 
@@ -198,12 +206,17 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 check=True,
                 input=chunk,
                 stdout=outfile,
+                stderr=subprocess.PIPE
             )
-        except (subprocess.CalledProcessError, OSError) as err:
+        except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
-                f"{exe} < {input_path} > {output_path}"
+                f"{exe} < {input_path} > {output_path}\n"
+                f"{err}"
+                f"\n{err.stderr.decode()}" if err.stderr else ""
             ) from err
+        except OSError as err:
+            raise MadoopError(f"Command returned non-zero: {err}") from err
 
 
 def map_stage(exe, input_dir, output_dir):
@@ -300,6 +313,7 @@ def partition_keys_custom(
             [partitioner, str(num_reducers)],
             stdin=stack.enter_context(inpath.open()),
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         ))
         for line, partition in zip(
@@ -326,8 +340,10 @@ def partition_keys_custom(
 
         return_code = process.wait()
         if return_code:
+            stderr_output = process.stderr.read()
             raise MadoopError(
-                f"Partition executable returned non-zero: {str(partitioner)}"
+                f"Partition executable returned non-zero: {str(partitioner)}\n"
+                f"{stderr_output}"
             )
 
 
@@ -419,12 +435,17 @@ def reduce_single_file(exe, input_path, output_path):
                 check=True,
                 stdin=infile,
                 stdout=outfile,
+                stderr=subprocess.PIPE
             )
-        except (subprocess.CalledProcessError, OSError) as err:
+        except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
-                f"{exe} < {input_path} > {output_path}"
+                f"{exe} < {input_path} > {output_path}\n"
+                f"{err}"
+                f"\n{err.stderr.decode()}" if err.stderr else ""
             ) from err
+        except OSError as err:
+            raise MadoopError(f"Command returned non-zero: {err}") from err
 
 
 def reduce_stage(exe, input_dir, output_dir):
