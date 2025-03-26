@@ -306,13 +306,13 @@ for line in sys.stdin:
         print(f"{word}\t1")
 ```
 
-PDB/PDB++ confuses the stdin being piped in from the input file for user input, so we get these errors:
+PDB confuses the stdin being piped in from the input file for user input, so we get these errors:
 ```console
 $ cat input/input* | ./map.py
 ...
-(Pdb++) *** SyntaxError: invalid syntax
-(Pdb++) *** SyntaxError: invalid syntax
-(Pdb++) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
 ...
 ```
 
@@ -332,7 +332,7 @@ Now our debugger works correctly.
 ```console
 $ cat input/input* | ./map.py
 ...
-(Pdb++)
+(Pdb)
 ```
 
 Don't forget to remove your temporary changes!
