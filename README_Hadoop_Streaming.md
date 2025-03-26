@@ -293,7 +293,7 @@ These are some pro-tips for working with MapReduce programs written in Python fo
 To avoid interfering with pipeline output in `stdout`, direct debugging print messages to `stderr`:
 
 ```python
-print("finding bugs... ~(^._.)", file=sys.stderr)
+print("DEBUG finding bugs... ~(^._.)", file=sys.stderr)
 ```
 
 ### Debugging
