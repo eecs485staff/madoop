@@ -289,6 +289,13 @@ if __name__ == "__main__":
 ## Tips and tricks
 These are some pro-tips for working with MapReduce programs written in Python for the Hadoop Streaming interface.
 
+### Printing to `stderr`
+To avoid interfering with pipeline output in `stdout`, direct debugging print messages to `stderr`:
+
+```python
+print("finding bugs... ~(^._.)", file=sys.stderr)
+```
+
 ### Debugging
 We encounter a problem if we add a `breakpoint()` in `map.py`.
 ```python
