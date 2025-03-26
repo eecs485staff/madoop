@@ -289,7 +289,14 @@ if __name__ == "__main__":
 ## Tips and tricks
 These are some pro-tips for working with MapReduce programs written in Python for the Hadoop Streaming interface.
 
-### Debugging
+### Print debug messages to `stderr`
+To avoid interfering with pipeline output in `stdout`, direct debugging print messages to `stderr`:
+
+```python
+print("DEBUG finding bugs... ~(^._.)", file=sys.stderr)
+```
+
+### Debugging with PDB
 We encounter a problem if we add a `breakpoint()` in `map.py`.
 ```python
 for line in sys.stdin:
@@ -299,13 +306,13 @@ for line in sys.stdin:
         print(f"{word}\t1")
 ```
 
-PDB/PDB++ confuses the stdin being piped in from the input file for user input, so we get these errors:
+PDB confuses the stdin being piped in from the input file for user input, so we get these errors:
 ```console
 $ cat input/input* | ./map.py
 ...
-(Pdb++) *** SyntaxError: invalid syntax
-(Pdb++) *** SyntaxError: invalid syntax
-(Pdb++) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
 ...
 ```
 
@@ -325,7 +332,7 @@ Now our debugger works correctly.
 ```console
 $ cat input/input* | ./map.py
 ...
-(Pdb++)
+(Pdb)
 ```
 
 Don't forget to remove your temporary changes!
