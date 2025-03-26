@@ -208,3 +208,64 @@ def test_input_path_spaces(tmpdir):
         TESTDATA_DIR/"word_count/correct/output",
         tmpdir/"output",
     )
+
+
+def test_map_exe_error_msg(tmpdir):
+    """Map exe returns non-zero with stderr output should produce an
+    error message and forward the stderr output.
+    """
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Map error message to stderr"
+    ):
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count/input",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map_error_msg.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
+            partitioner=None,
+        )
+
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Map error message to stderr"
+    ):
+        map_stage(
+            exe=TESTDATA_DIR/"word_count/map_error_msg.py",
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir=Path(tmpdir),
+        )
+
+
+def test_partition_exe_error_msg(tmpdir):
+    """Partition exe returns non-zero with stderr output should produce an
+    error message and forward the stderr output.
+    """
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Partition error message to stderr"
+    ):
+        madoop.mapreduce(
+            input_path=TESTDATA_DIR/"word_count/input",
+            output_dir="output",
+            map_exe=TESTDATA_DIR/"word_count/map.py",
+            reduce_exe=TESTDATA_DIR/"word_count/reduce.py",
+            num_reducers=4,
+            partitioner=TESTDATA_DIR/"word_count/partition_error_msg.py",
+        )
+
+
+def test_reduce_exe_error_msg(tmpdir):
+    """Reduce exe returns non-zero with stderr output should produce an
+    error message and forward the stderr output.
+    """
+    with tmpdir.as_cwd(), pytest.raises(
+        madoop.MadoopError,
+        match="Reduce error message to stderr"
+    ):
+        reduce_stage(
+            exe=TESTDATA_DIR/"word_count/reduce_error_msg.py",
+            input_dir=TESTDATA_DIR/"word_count/input",
+            output_dir=Path(tmpdir),
+        )
