@@ -44,7 +44,7 @@ def mapreduce(
     is_executable(map_exe)
     is_executable(reduce_exe)
     if partitioner:
-        is_executable(partitioner)
+        is_executable(partitioner, "2")
 
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
@@ -157,7 +157,7 @@ def normalize_input_paths(input_path):
     return input_paths
 
 
-def is_executable(exe):
+def is_executable(exe, *args):
     """Verify exe is executable and raise exception if it is not.
 
     Execute exe with an empty string input and verify that it returns zero.  We
@@ -168,7 +168,7 @@ def is_executable(exe):
     exe = pathlib.Path(exe).resolve()
     try:
         subprocess.run(
-            str(exe),
+            [str(exe), *args],
             shell=False,
             input="".encode(),
             stdout=subprocess.PIPE,
