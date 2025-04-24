@@ -43,8 +43,9 @@ def mapreduce(
     # Executable scripts must have valid shebangs
     is_executable(map_exe)
     is_executable(reduce_exe)
+    # The partitioner executable expects to receive num_reducers as an arg
     if partitioner:
-        is_executable(partitioner, "2")
+        is_executable(partitioner, str(num_reducers))
 
     # Create a tmp directory which will be automatically cleaned up
     with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
