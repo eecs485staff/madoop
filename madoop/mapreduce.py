@@ -200,7 +200,7 @@ def map_single_chunk(exe, input_path, output_path, chunk):
     """Execute mapper on a single chunk."""
     with output_path.open("w") as outfile:
         try:
-            subprocess.run(
+            ret = subprocess.run(
                 str(exe),
                 shell=False,
                 check=True,
@@ -217,6 +217,8 @@ def map_single_chunk(exe, input_path, output_path, chunk):
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
+        if ret.stderr:
+            LOGGER.warning("stderr: %s", ret.stderr.decode().rstrip())
 
 
 def map_stage(exe, input_dir, output_dir):
@@ -429,7 +431,7 @@ def reduce_single_file(exe, input_path, output_path):
     """Execute reducer on a single file."""
     with input_path.open() as infile, output_path.open("w") as outfile:
         try:
-            subprocess.run(
+            ret = subprocess.run(
                 str(exe),
                 shell=False,
                 check=True,
@@ -446,6 +448,8 @@ def reduce_single_file(exe, input_path, output_path):
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
+        if ret.stderr:
+            LOGGER.warning("stderr: %s", ret.stderr.decode().rstrip())
 
 
 def reduce_stage(exe, input_dir, output_dir):
