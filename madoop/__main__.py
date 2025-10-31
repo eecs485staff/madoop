@@ -6,8 +6,10 @@ Andrew DeOrio <awdeorio@umich.edu>
 import argparse
 import importlib.metadata
 import logging
+import os
 import pathlib
 import shutil
+import stat
 import sys
 import textwrap
 from .mapreduce import mapreduce
@@ -100,6 +102,13 @@ class ExampleAction(argparse.Action):
         if dst.exists():
             parser.error(f"directory already exists: {dst}")
         shutil.copytree(src, dst)
+
+        # Set executable bit
+        st = os.stat(dst/"map.py")
+        os.chmod(dst/"map.py", st.st_mode | stat.S_IEXEC)
+        st = os.stat(dst/"reduce.py")
+        os.chmod(dst/"reduce.py", st.st_mode | stat.S_IEXEC)
+
         print(textwrap.dedent(f"""\
             Created {dst}, try:
 
