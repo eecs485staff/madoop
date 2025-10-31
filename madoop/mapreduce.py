@@ -199,9 +199,13 @@ def part_filename(num):
 
 def map_single_chunk(exe, input_path, output_path, chunk):
     """Execute mapper on a single chunk."""
+    LOGGER.debug(
+        "%s < %s > %s",
+        exe.name, last_two(input_path), last_two(output_path),
+    )
     with output_path.open("w") as outfile:
         try:
-            subprocess.run(
+            ret = subprocess.run(
                 str(exe),
                 shell=False,
                 check=True,
@@ -218,6 +222,8 @@ def map_single_chunk(exe, input_path, output_path, chunk):
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
+        if ret.stderr:
+            LOGGER.warning("stderr: %s", ret.stderr.decode().rstrip())
 
 
 def map_stage(exe, input_dir, output_dir):
@@ -230,10 +236,6 @@ def map_stage(exe, input_dir, output_dir):
         for input_path in normalize_input_paths(input_dir):
             for chunk in split_file(input_path, MAX_INPUT_SPLIT_SIZE):
                 output_path = output_dir/part_filename(part_num)
-                LOGGER.debug(
-                    "%s < %s > %s",
-                    exe.name, last_two(input_path), last_two(output_path),
-                )
                 futures.append(pool.submit(
                     map_single_chunk,
                     exe,
@@ -428,9 +430,13 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
 
 def reduce_single_file(exe, input_path, output_path):
     """Execute reducer on a single file."""
+    LOGGER.debug(
+        "%s < %s > %s",
+        exe.name, last_two(input_path), last_two(output_path),
+    )
     with input_path.open() as infile, output_path.open("w") as outfile:
         try:
-            subprocess.run(
+            ret = subprocess.run(
                 str(exe),
                 shell=False,
                 check=True,
@@ -447,6 +453,8 @@ def reduce_single_file(exe, input_path, output_path):
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
+        if ret.stderr:
+            LOGGER.warning("stderr: %s", ret.stderr.decode().rstrip())
 
 
 def reduce_stage(exe, input_dir, output_dir):
@@ -458,10 +466,6 @@ def reduce_stage(exe, input_dir, output_dir):
     ) as pool:
         for i, input_path in enumerate(sorted(input_dir.iterdir())):
             output_path = output_dir/part_filename(i)
-            LOGGER.debug(
-                "%s < %s > %s",
-                exe.name, last_two(input_path), last_two(output_path),
-            )
             futures.append(pool.submit(
                 reduce_single_file,
                 exe,
