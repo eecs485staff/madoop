@@ -72,5 +72,10 @@ exception type that escapes the API; the CLI catches it and exits with `Error: .
 - CLI options mirror Hadoop Streaming names (`-input`, `-output`, `-mapper`,
   `-reducer`, `-numReduceTasks`, `-partitioner`) and use `parse_known_args`, so an
   ignored `jar hadoop-streaming-X.Y.Z.jar` argument is tolerated.
-- The version lives in `pyproject.toml`; the release procedure (tag, build, twine) is
-  in `CONTRIBUTING.md`.
+- The package version lives in `pyproject.toml`; the release procedure (tag, build,
+  twine) is in `CONTRIBUTING.md`.
+- **Supported Python versions live in two places that must stay in lock step.** When
+  adding or dropping a version, update both together:
+  1. `pyproject.toml` `requires-python` (the minimum version floor).
+  2. `.github/workflows/continuous_integration.yml` `python-version` matrix (tests the
+     floor and the latest minor, e.g. `["3.9", "3.x"]`).
