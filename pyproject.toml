@@ -14,7 +14,7 @@ readme = "README.md"
 keywords = [
   "madoop", "Hadoop", "MapReduce", "Michigan Hadoop", "Hadoop Streaming"
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 
 [project.urls]
 repository = "https://github.com/eecs485staff/madoop/"
