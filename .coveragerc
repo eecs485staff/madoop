@@ -1,3 +1,8 @@
 [run]
 concurrency = thread,multiprocessing
 parallel = true
+
+# Short-lived multiprocessing Pool workers and subprocess helpers sometimes
+# exit before running any measurable Python, which is expected.  Silence the
+# resulting "No data was collected" noise.
+disable_warnings = no-data-collected
