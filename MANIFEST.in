@@ -8,6 +8,8 @@ graft tests
 graft madoop/example
 
 # Avoid dev and and binary files
+exclude AGENTS.md
+exclude CLAUDE.md
 exclude tox.ini
 exclude .coveragerc
 exclude .editorconfig
