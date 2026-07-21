@@ -1,18 +1,16 @@
 """Unit test utilities."""
+
 import filecmp
 import pathlib
 
-
 # Directory containing unit test input files, etc.
-TESTDATA_DIR = pathlib.Path(__file__).parent/"testdata"
+TESTDATA_DIR = pathlib.Path(__file__).parent / "testdata"
 
 
 def assert_dirs_eq(dir1, dir2):
     """Compare two directories of files."""
     assert dir1 != dir2, (
-        "Refusing to compare a directory to itself:\n"
-        f"dir1 = {dir1}\n"
-        f"dir2 = {dir2}\n"
+        f"Refusing to compare a directory to itself:\ndir1 = {dir1}\ndir2 = {dir2}\n"
     )
 
     # Get a list of files in each directory
@@ -37,7 +35,5 @@ def assert_dirs_eq(dir1, dir2):
     # Compare files pairwise
     for path1, path2 in zip(sorted(paths1), sorted(paths2)):
         assert filecmp.cmp(path1, path2, shallow=False), (
-            "Files do not match:\n"
-            f"path1 = {path1}\n"
-            f"path2 = {path2}\n"
+            f"Files do not match:\npath1 = {path1}\npath2 = {path2}\n"
         )

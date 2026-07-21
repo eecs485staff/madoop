@@ -35,11 +35,9 @@ madoop = "madoop.__main__:main"
 dev = [
     "build",
     "check-manifest",
-    "pycodestyle",
-    "pydocstyle",
-    "pylint",
     "pytest",
     "pytest-cov",
+    "ruff",
     "tox",
     "twine",
 ]
@@ -47,3 +45,51 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["madoop*"]
+
+[tool.ruff.lint]
+# Specify which groups of lint rules to use.
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "D",   # pydocstyle
+    "I",   # isort
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "PT",  # flake8-pytest-style
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "PL",  # pylint subset
+    "RET", # flake8-return
+    "C4",  # flake8-comprehensions
+    "ARG", # flake8-unused-arguments
+]
+# Ignore specific rule violations.  See https://docs.astral.sh/ruff/rules.
+ignore = [
+    # Disable the following two rules because they conflict with other rules.
+    "D203",  # one-blank-line-before-class (conflicts with D211)
+    "D213",  # multi-line-summary-second-line (conflicts with D212)
+
+    # Disable the following rules because they're made redundant by the formatter.
+    "W191",  # tab-indentation
+    "E111",  # indentation-with-invalid-multiple
+    "E114",  # indentation-with-invalid-multiple-comment
+    "E117",  # over-indented
+    "D206",  # indent-with-spaces
+    "D300",  # triple-single-quotes
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+# `utils` is the shared test-helper module (tests/utils.py).  Pin it as
+# first-party so it's grouped separately from third-party imports like
+# pytest, instead of relying on ruff's implicit detection.
+known-first-party = ["utils"]
+
+[tool.ruff.lint.per-file-ignores]
+# Plain numeric literals in test assertions are idiomatic, not a code smell.
+# Ignore PLR2004 in test files.
+"test_*.py" = ["PLR2004"]
+

@@ -3,7 +3,6 @@
 
 import sys
 
-
 # Avoid error on executable check which has an empty string input
 input_lines_n = sum(1 for _ in sys.stdin)
 if input_lines_n > 1:
