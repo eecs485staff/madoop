@@ -33,7 +33,7 @@ def assert_dirs_eq(dir1, dir2):
     )
 
     # Compare files pairwise
-    for path1, path2 in zip(sorted(paths1), sorted(paths2)):
+    for path1, path2 in zip(sorted(paths1), sorted(paths2), strict=True):
         assert filecmp.cmp(path1, path2, shallow=False), (
             f"Files do not match:\npath1 = {path1}\npath2 = {path2}\n"
         )

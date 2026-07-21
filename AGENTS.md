@@ -73,8 +73,6 @@ exception type that escapes the API; the CLI catches it and exits with `Error: .
   ignored `jar hadoop-streaming-X.Y.Z.jar` argument is tolerated.
 - The package version lives in `pyproject.toml`; the release procedure (tag, build,
   twine) is in `CONTRIBUTING.md`.
-- **Supported Python versions live in two places that must stay in lock step.** When
-  adding or dropping a version, update both together:
-  1. `pyproject.toml` `requires-python` (the minimum version floor).
-  2. `.github/workflows/continuous_integration.yml` `python-version` matrix (tests the
-     floor and the latest minor, e.g. `["3.9", "3.x"]`).
+- **Python version support is zero-maintenance.** `pyproject.toml` sets the minimum
+  floor via `requires-python`; CI only ever tests the latest Python (`.github/workflows/continuous_integration.yml`
+  matrix is `["3.x"]`), so no file needs editing when a new Python is released.
