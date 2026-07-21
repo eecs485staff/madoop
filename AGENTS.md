@@ -12,7 +12,7 @@ $ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip install --editable .[dev]
 
-# Run the full CI suite (file diffs, pycodestyle, pydocstyle, pylint,
+# Run the full CI suite (file diffs, ruff check, ruff format --check,
 # check-manifest, pytest with coverage) in a clean temp virtualenv
 $ tox -e py3
 
@@ -23,9 +23,8 @@ $ pytest tests/test_api.py::test_simple     # single test
 $ pytest --cov ./madoop --cov-report term-missing
 
 # Linters individually
-$ pycodestyle madoop tests
-$ pydocstyle madoop tests
-$ pylint madoop tests
+$ ruff check madoop tests
+$ ruff format --check madoop tests
 $ check-manifest
 ```
 

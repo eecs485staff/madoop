@@ -29,9 +29,8 @@ $ pytest --cov ./madoop --cov-report term-missing
 
 Test code style
 ```console
-$ pycodestyle madoop tests setup.py
-$ pydocstyle madoop tests setup.py
-$ pylint madoop tests setup.py
+$ ruff check madoop tests
+$ ruff format --check madoop tests
 $ check-manifest
 ```
 

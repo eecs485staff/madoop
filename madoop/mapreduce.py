@@ -3,18 +3,19 @@
 Andrew DeOrio <awdeorio@umich.edu>
 
 """
-import contextlib
+
 import collections
+import concurrent.futures
+import contextlib
 import hashlib
 import logging
+import multiprocessing
 import pathlib
 import shutil
 import subprocess
 import tempfile
-import multiprocessing
-import concurrent.futures
-from .exceptions import MadoopError
 
+from .exceptions import MadoopError
 
 # Large input files are automatically split
 MAX_INPUT_SPLIT_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -23,7 +24,7 @@ MAX_INPUT_SPLIT_SIZE = 10 * 1024 * 1024  # 10 MB
 LOGGER = logging.getLogger("madoop")
 
 
-def mapreduce(
+def mapreduce(  # noqa: PLR0913
     *,
     input_path,
     output_dir,
@@ -33,7 +34,6 @@ def mapreduce(
     partitioner=None,
 ):
     """Madoop API."""
-    # pylint: disable=too-many-arguments
     # Do not clobber existing output directory
     output_dir = pathlib.Path(output_dir)
     if output_dir.exists():
@@ -48,14 +48,14 @@ def mapreduce(
         is_executable(partitioner, str(num_reducers))
 
     # Create a tmp directory which will be automatically cleaned up
-    with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir:
-        tmpdir = pathlib.Path(tmpdir)
+    with tempfile.TemporaryDirectory(prefix="madoop-") as tmpdir_str:
+        tmpdir = pathlib.Path(tmpdir_str)
         LOGGER.debug("tmpdir=%s", tmpdir)
 
         # Create stage input and output directory
-        map_output_dir = tmpdir/'mapper-output'
-        reduce_input_dir = tmpdir/'reducer-input'
-        reduce_output_dir = tmpdir/'output'
+        map_output_dir = tmpdir / "mapper-output"
+        reduce_input_dir = tmpdir / "reducer-input"
+        reduce_output_dir = tmpdir / "output"
         map_output_dir.mkdir()
         reduce_input_dir.mkdir()
         reduce_output_dir.mkdir()
@@ -98,7 +98,7 @@ def mapreduce(
             st_size = filename.stat().st_size
             total_size += st_size
             shutil.move(filename, output_dir)
-            output_path = output_dir.parent/last_two(filename)
+            output_path = output_dir.parent / last_two(filename)
             LOGGER.debug("%s size=%sB", output_path, st_size)
 
     # Remind user where to find output
@@ -127,11 +127,11 @@ def split_file(input_filename, max_chunksize):
             if last_newline != -1:
                 # Yield the content up to the last newline, saving the rest
                 # for the next chunk.
-                yield buffer[:last_newline + 1]
+                yield buffer[: last_newline + 1]
 
                 # Remove processed data from the buffer. The next chunk will
                 # start with whatever data came after the last newline.
-                buffer = buffer[last_newline + 1:]
+                buffer = buffer[last_newline + 1 :]
 
         # Yield any remaining data.
         if buffer:
@@ -147,7 +147,7 @@ def normalize_input_paths(input_path):
     """
     input_paths = []
     if input_path.is_dir():
-        for path in sorted(input_path.glob('*')):
+        for path in sorted(input_path.glob("*")):
             if path.is_file():
                 input_paths.append(path)
             else:
@@ -171,16 +171,17 @@ def is_executable(exe, *args):
         subprocess.run(
             [str(exe), *args],
             shell=False,
-            input="".encode(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            input=b"",
+            capture_output=True,
             check=True,
         )
     except subprocess.CalledProcessError as err:
         raise MadoopError(
-            f"Failed executable test: {err}"
-            f"\n{err.stdout.decode()}" if err.stdout else ""
-            f"{err.stderr.decode()}" if err.stderr else ""
+            f"Failed executable test: {err}\n{err.stdout.decode()}"
+            if err.stdout
+            else f"{err.stderr.decode()}"
+            if err.stderr
+            else ""
         ) from err
     except OSError as err:
         raise MadoopError(f"Failed executable test: {err}") from err
@@ -201,7 +202,9 @@ def map_single_chunk(exe, input_path, output_path, chunk):
     """Execute mapper on a single chunk."""
     LOGGER.debug(
         "%s < %s > %s",
-        exe.name, last_two(input_path), last_two(output_path),
+        exe.name,
+        last_two(input_path),
+        last_two(output_path),
     )
     with output_path.open("w") as outfile:
         try:
@@ -211,14 +214,16 @@ def map_single_chunk(exe, input_path, output_path, chunk):
                 check=True,
                 input=chunk,
                 stdout=outfile,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
                 f"{err}"
-                f"\n{err.stderr.decode()}" if err.stderr else ""
+                f"\n{err.stderr.decode()}"
+                if err.stderr
+                else ""
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
@@ -235,14 +240,16 @@ def map_stage(exe, input_dir, output_dir):
     ) as pool:
         for input_path in normalize_input_paths(input_dir):
             for chunk in split_file(input_path, MAX_INPUT_SPLIT_SIZE):
-                output_path = output_dir/part_filename(part_num)
-                futures.append(pool.submit(
-                    map_single_chunk,
-                    exe,
-                    input_path,
-                    output_path,
-                    chunk,
-                ))
+                output_path = output_dir / part_filename(part_num)
+                futures.append(
+                    pool.submit(
+                        map_single_chunk,
+                        exe,
+                        input_path,
+                        output_path,
+                        chunk,
+                    )
+                )
                 part_num += 1
     for future in concurrent.futures.as_completed(futures):
         exception = future.exception()
@@ -267,11 +274,8 @@ def keyhash(key):
 
 
 def partition_keys_default(
-        inpath,
-        outpaths,
-        input_keys_stats,
-        output_keys_stats,
-        num_reducers):
+    inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers
+):
     """Allocate lines of inpath among outpaths using hash of key.
 
     Update the data structures provided by the caller input_keys_stats and
@@ -283,7 +287,7 @@ def partition_keys_default(
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
         for line in stack.enter_context(inpath.open()):
-            key = line.partition('\t')[0]
+            key = line.partition("\t")[0]
             input_keys_stats[inpath].add(key)
             reducer_idx = keyhash(key) % num_reducers
             outfiles[reducer_idx].write(line)
@@ -291,7 +295,7 @@ def partition_keys_default(
             output_keys_stats[outpath].add(key)
 
 
-def partition_keys_custom(
+def partition_keys_custom(  # noqa: PLR0913
     inpath,
     outpaths,
     input_keys_stats,
@@ -304,38 +308,36 @@ def partition_keys_custom(
     Update the data structures provided by the caller input_keys_stats and
     output_keys_stats.  Both map a filename to a set of of keys.
     """
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
-    # pylint: disable=too-many-locals
     assert len(outpaths) == num_reducers
     outparent = outpaths[0].parent
     assert all(i.parent == outparent for i in outpaths)
     with contextlib.ExitStack() as stack:
         outfiles = [stack.enter_context(p.open("a")) for p in outpaths]
-        process = stack.enter_context(subprocess.Popen(
-            [partitioner, str(num_reducers)],
-            stdin=stack.enter_context(inpath.open()),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        ))
-        for line, partition in zip(
-            stack.enter_context(inpath.open()),
-            stack.enter_context(process.stdout)
+        process = stack.enter_context(
+            subprocess.Popen(
+                [partitioner, str(num_reducers)],
+                stdin=stack.enter_context(inpath.open()),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        )
+        for line, partition_raw in zip(
+            stack.enter_context(inpath.open()), stack.enter_context(process.stdout)
         ):
             try:
-                partition = int(partition)
+                partition = int(partition_raw)
             except ValueError as err:
                 raise MadoopError(
-                     "Partition executable returned non-integer value: "
-                     f"{partition} for line '{line}'."
+                    "Partition executable returned non-integer value: "
+                    f"{partition_raw} for line '{line}'."
                 ) from err
             if not 0 <= partition < num_reducers:
                 raise MadoopError(
-                     "Partition executable returned invalid value: "
-                     f"0 <= {partition} < {num_reducers} for line '{line}'."
+                    "Partition executable returned invalid value: "
+                    f"0 <= {partition} < {num_reducers} for line '{line}'."
                 )
-            key = line.partition('\t')[0]
+            key = line.partition("\t")[0]
             input_keys_stats[inpath].add(key)
             outfiles[partition].write(line)
             outpath = outpaths[partition]
@@ -365,8 +367,7 @@ def log_output_key_stats(output_keys_stats, output_dir):
     for outpath, keys in sorted(output_keys_stats.items()):
         all_output_keys.update(keys)
         LOGGER.debug("%s unique_keys=%s", last_two(outpath), len(keys))
-    LOGGER.debug("%s all_unique_keys=%s", output_dir.name,
-                 len(all_output_keys))
+    LOGGER.debug("%s all_unique_keys=%s", output_dir.name, len(all_output_keys))
 
 
 def group_stage(input_dir, output_dir, num_reducers, partitioner):
@@ -380,7 +381,7 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
     LOGGER.debug("%s reducers", num_reducers)
     outpaths = []
     for i in range(num_reducers):
-        outpaths.append(output_dir/part_filename(i))
+        outpaths.append(output_dir / part_filename(i))
 
     # Track keyspace stats, map filename -> set of keys
     input_keys_stats = collections.defaultdict(set)
@@ -389,11 +390,18 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
     # Partition input, appending to output files
     for inpath in sorted(input_dir.iterdir()):
         if not partitioner:
-            partition_keys_default(inpath, outpaths, input_keys_stats,
-                                   output_keys_stats, num_reducers)
+            partition_keys_default(
+                inpath, outpaths, input_keys_stats, output_keys_stats, num_reducers
+            )
         else:
-            partition_keys_custom(inpath, outpaths, input_keys_stats,
-                                  output_keys_stats, num_reducers, partitioner)
+            partition_keys_custom(
+                inpath,
+                outpaths,
+                input_keys_stats,
+                output_keys_stats,
+                num_reducers,
+                partitioner,
+            )
 
     log_input_key_stats(input_keys_stats, input_dir)
 
@@ -403,7 +411,9 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
     for inpath in sorted(input_keys_stats.keys()):
         LOGGER.debug(
             "partition %s >> %s/{%s}",
-            last_two(inpath), outparent.name, ",".join(outnames),
+            last_two(inpath),
+            outparent.name,
+            ",".join(outnames),
         )
 
     # Remove empty output files.  We won't always use the maximum number of
@@ -418,7 +428,6 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
         # Don't use a with statement here, because Coverage won't be able to
         # detect code running in a subprocess if we do.
         # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html
-        # pylint: disable=consider-using-with
         pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
         pool.map(sort_file, sorted(output_dir.iterdir()))
     finally:
@@ -432,7 +441,9 @@ def reduce_single_file(exe, input_path, output_path):
     """Execute reducer on a single file."""
     LOGGER.debug(
         "%s < %s > %s",
-        exe.name, last_two(input_path), last_two(output_path),
+        exe.name,
+        last_two(input_path),
+        last_two(output_path),
     )
     with input_path.open() as infile, output_path.open("w") as outfile:
         try:
@@ -442,14 +453,16 @@ def reduce_single_file(exe, input_path, output_path):
                 check=True,
                 stdin=infile,
                 stdout=outfile,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as err:
             raise MadoopError(
                 f"Command returned non-zero: "
                 f"{exe} < {input_path} > {output_path}\n"
                 f"{err}"
-                f"\n{err.stderr.decode()}" if err.stderr else ""
+                f"\n{err.stderr.decode()}"
+                if err.stderr
+                else ""
             ) from err
         except OSError as err:
             raise MadoopError(f"Command returned non-zero: {err}") from err
@@ -465,18 +478,20 @@ def reduce_stage(exe, input_dir, output_dir):
         max_workers=multiprocessing.cpu_count()
     ) as pool:
         for i, input_path in enumerate(sorted(input_dir.iterdir())):
-            output_path = output_dir/part_filename(i)
-            futures.append(pool.submit(
-                reduce_single_file,
-                exe,
-                input_path,
-                output_path,
-            ))
+            output_path = output_dir / part_filename(i)
+            futures.append(
+                pool.submit(
+                    reduce_single_file,
+                    exe,
+                    input_path,
+                    output_path,
+                )
+            )
     for future in concurrent.futures.as_completed(futures):
         exception = future.exception()
         if exception:
             raise exception
-    LOGGER.info("Finished reduce executions: %s", i+1)
+    LOGGER.info("Finished reduce executions: %s", i + 1)
 
 
 def last_two(path):
