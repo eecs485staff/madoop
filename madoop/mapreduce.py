@@ -322,7 +322,10 @@ def partition_keys_custom(  # noqa: PLR0913
                 text=True,
             )
         )
-        for line, partition_raw in zip(
+        # Don't use strict=True: a failing partitioner exits early without writing to
+        # stdout, which must fall through to the return code check below instead of
+        # raising here.
+        for line, partition_raw in zip(  # noqa: B905
             stack.enter_context(inpath.open()), stack.enter_context(process.stdout)
         ):
             try:

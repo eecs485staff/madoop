@@ -14,7 +14,7 @@ readme = "README.md"
 keywords = [
   "madoop", "Hadoop", "MapReduce", "Michigan Hadoop", "Hadoop Streaming"
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Education",
