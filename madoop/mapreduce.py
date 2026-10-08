@@ -296,6 +296,7 @@ def partition_keys_default(
 
 
 def partition_keys_custom(  # noqa: PLR0913
+    *,
     inpath,
     outpaths,
     input_keys_stats,
@@ -398,12 +399,12 @@ def group_stage(input_dir, output_dir, num_reducers, partitioner):
             )
         else:
             partition_keys_custom(
-                inpath,
-                outpaths,
-                input_keys_stats,
-                output_keys_stats,
-                num_reducers,
-                partitioner,
+                inpath=inpath,
+                outpaths=outpaths,
+                input_keys_stats=input_keys_stats,
+                output_keys_stats=output_keys_stats,
+                num_reducers=num_reducers,
+                partitioner=partitioner,
             )
 
     log_input_key_stats(input_keys_stats, input_dir)
