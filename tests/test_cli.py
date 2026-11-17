@@ -1,9 +1,12 @@
 """System tests for the command line interface."""
-import subprocess
+
 import importlib.metadata
+import subprocess
+
 import pytest
-from . import utils
-from .utils import TESTDATA_DIR
+
+import utils
+from utils import TESTDATA_DIR
 
 
 def test_version():
@@ -35,17 +38,21 @@ def test_simple(tmpdir):
         subprocess.run(
             [
                 "madoop",
-                "-input", TESTDATA_DIR/"word_count/input",
-                "-output", "output",
-                "-mapper", TESTDATA_DIR/"word_count/map.py",
-                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+                "-input",
+                TESTDATA_DIR / "word_count/input",
+                "-output",
+                "output",
+                "-mapper",
+                TESTDATA_DIR / "word_count/map.py",
+                "-reducer",
+                TESTDATA_DIR / "word_count/reduce.py",
             ],
             stdout=subprocess.PIPE,
             check=True,
         )
     utils.assert_dirs_eq(
-        TESTDATA_DIR/"word_count/correct/output",
-        tmpdir/"output",
+        TESTDATA_DIR / "word_count/correct/output",
+        tmpdir / "output",
     )
 
 
@@ -55,18 +62,23 @@ def test_2_reducers(tmpdir):
         subprocess.run(
             [
                 "madoop",
-                "-input", TESTDATA_DIR/"word_count/input",
-                "-output", "output",
-                "-mapper", TESTDATA_DIR/"word_count/map.py",
-                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
-                "-numReduceTasks", "2",
+                "-input",
+                TESTDATA_DIR / "word_count/input",
+                "-output",
+                "output",
+                "-mapper",
+                TESTDATA_DIR / "word_count/map.py",
+                "-reducer",
+                TESTDATA_DIR / "word_count/reduce.py",
+                "-numReduceTasks",
+                "2",
             ],
             stdout=subprocess.PIPE,
             check=True,
         )
     utils.assert_dirs_eq(
-        TESTDATA_DIR/"word_count/correct/output-2-reducers",
-        tmpdir/"output",
+        TESTDATA_DIR / "word_count/correct/output-2-reducers",
+        tmpdir / "output",
     )
 
 
@@ -77,13 +89,17 @@ def test_verbose(tmpdir):
             [
                 "madoop",
                 "--verbose",
-                "-input", TESTDATA_DIR/"word_count/input",
-                "-output", "output",
-                "-mapper", TESTDATA_DIR/"word_count/map.py",
-                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+                "-input",
+                TESTDATA_DIR / "word_count/input",
+                "-output",
+                "output",
+                "-mapper",
+                TESTDATA_DIR / "word_count/map.py",
+                "-reducer",
+                TESTDATA_DIR / "word_count/reduce.py",
             ],
             stdout=subprocess.PIPE,
-            universal_newlines=True,
+            text=True,
             check=True,
         )
     stdout_lines = completed_process.stdout.strip().split("\n")
@@ -98,11 +114,16 @@ def test_hadoop_arguments(tmpdir):
         subprocess.run(
             [
                 "madoop",
-                "jar", "hadoop-streaming-2.7.2.jar",  # Hadoop args
-                "-input", TESTDATA_DIR/"word_count/input",
-                "-output", "output",
-                "-mapper", TESTDATA_DIR/"word_count/map.py",
-                "-reducer", TESTDATA_DIR/"word_count/reduce.py",
+                "jar",
+                "hadoop-streaming-2.7.2.jar",  # Hadoop args
+                "-input",
+                TESTDATA_DIR / "word_count/input",
+                "-output",
+                "output",
+                "-mapper",
+                TESTDATA_DIR / "word_count/map.py",
+                "-reducer",
+                TESTDATA_DIR / "word_count/reduce.py",
             ],
             stdout=subprocess.PIPE,
             check=True,
@@ -115,19 +136,17 @@ def test_example(tmpdir):
         subprocess.run(
             ["madoop", "--example"],
             check=True,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            capture_output=True,
         )
-    assert (tmpdir/"example/input/input01.txt").exists()
-    assert (tmpdir/"example/input/input02.txt").exists()
-    assert (tmpdir/"example/map.py").exists()
-    assert (tmpdir/"example/reduce.py").exists()
+    assert (tmpdir / "example/input/input01.txt").exists()
+    assert (tmpdir / "example/input/input02.txt").exists()
+    assert (tmpdir / "example/map.py").exists()
+    assert (tmpdir / "example/reduce.py").exists()
 
     # Call it again and it should refuse to clobber
     with tmpdir.as_cwd(), pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
             ["madoop", "--example"],
             check=True,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            capture_output=True,
         )

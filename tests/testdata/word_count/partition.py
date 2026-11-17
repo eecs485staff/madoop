@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python3 -u
 """Word count partitioner."""
-import sys
 
+import sys
 
 num_reducers = int(sys.argv[1])
 

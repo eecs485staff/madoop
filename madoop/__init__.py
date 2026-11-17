@@ -3,5 +3,6 @@
 Andrew DeOrio <awdeorio@umich.edu>
 
 """
-from .mapreduce import mapreduce
-from .exceptions import MadoopError
+
+from .exceptions import MadoopError as MadoopError
+from .mapreduce import mapreduce as mapreduce
